@@ -1,0 +1,24 @@
+{
+  "name": "airlock",
+  "version": "0.0.1",
+  "description": "Data sovereignty suite",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron . --no-sandbox",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/seanttaylor/airlock.git"
+  },
+  "author": "Sean T Taylor",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/seanttaylor/airlock"
+  },
+  "homepage": "https://github.com/seanttaylor/airlock#readme",
+  "devDependencies": {
+    "electron": "^38.2.2"
+  },
+  "type": "module"
+}

@@ -1,0 +1,19 @@
+{
+    "name": "backend",
+    "version": "0.0.1",
+    "description": "The Airlock backend application",
+    "private": true,
+    "main": "index.js",
+    "type": "module",
+    "scripts": {
+        "start": "node --env-file=.env index.js"
+    },
+    "engines": {
+        "node": ">=16.0.0"
+    },
+    "author": "Sean T Taylor",
+    "license": "ISC",
+    "dependencies": {
+        "js-sha256": "^0.11.1"
+    }
+}
