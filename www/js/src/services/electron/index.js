@@ -3,7 +3,7 @@ import { ApplicationService } from '../../types/application.js';
 import { SystemEvent, Events } from '../../types/system-event.js';
 
 /**
- * This service is just used as a sanity check to ensure the module system is working
+ * This service provides access to Electron APIs
  */
 export class ElectronProvider extends ApplicationService {
   #logger;
@@ -42,7 +42,7 @@ export class ElectronProvider extends ApplicationService {
      * @param {()=> void} callback
      */
     addEventListener(name, callback) {
-        ipcMain.on(name, callback);
+      ipcMain.on(name, callback);
     }
   }
 

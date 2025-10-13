@@ -16,5 +16,4 @@ export class NOOPService extends ApplicationService {
     this.#sandbox = sandbox;
     this.#logger = sandbox.core.logger.getLoggerInstance();
   }
-
 }

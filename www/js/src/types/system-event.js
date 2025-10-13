@@ -12,6 +12,9 @@ export const Events = Object.freeze({
   APP_ACTIVATED_MAC_OS: 'activate',
   // Fired when all application windows have been closed
   APP_WINDOWS_CLOSED: 'window-all-closed',
+  // Generic wrapper event for all events emitted via the `ipcRenderer.send` API
+  IPC_WRAPPER_EVENT: 'evt.electron.ipc',
+  SET_TITLE: 'set-title'
 });
 
 /**

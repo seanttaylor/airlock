@@ -16,6 +16,7 @@ import { Configuration } from './src/services/config/index.js';
 //import { HTTPService } from './src/services/http.js';
 
 import { ElectronProvider } from './src/services/electron/index.js';
+import { ProcessProvider } from './src/services/process/index.js';
 import { NOOPService } from './src/services/noop/index.js';
 import { Xevents } from './src/services/event/index.js';
 
@@ -24,6 +25,8 @@ Sandbox.modules.of('Config', Configuration);
 Sandbox.modules.of('Events', Xevents);
 Sandbox.modules.of('NOOPService', NOOPService);
 Sandbox.modules.of('ElectronProvider', ElectronProvider);
+
+Sandbox.modules.of('ProcessProvider', ProcessProvider);
 
 const APP_NAME = 'com.airlock.app';
 const APP_VERSION = '0.0.1';
@@ -42,25 +45,45 @@ new Sandbox(MY_SERVICES, async function(/** @type {ISandbox} **/box) {
     createBrowserWindow();
     box.my.ElectronProvider.App.on(Events.APP_ACTIVATED_MAC_OS, onMacAppActivation);
     box.my.ElectronProvider.App.on(Events.APP_WINDOWS_CLOSED, onAppWindowsClosed);
-    box.my.Events.addEventListener(Events.APP_INITIALIZED, wrapAsyncEventHandler(logEvent));    
+    box.my.Events.addEventListener(Events.APP_INITIALIZED, wrapAsyncEventHandler(logEvent));
+    box.my.ElectronProvider.Ipc.addEventListener(Events.SET_TITLE, wrapElectronIpcEventHandler(onSetTitle));
+        
+    // Detect if a file was passed on launch (e.g., foo.pdf.alock)
+    const LAUNCH_ARGS = box.my.ProcessProvider.Process.argv.slice(1);
+    const OPENED_FILE = LAUNCH_ARGS.find(arg => arg.endsWith('.alock'));
+
+    GLOBALS.LAUNCH_ARGS = LAUNCH_ARGS;
+    GLOBALS.OPENED_FILE = OPENED_FILE;
     
     console.log(`${APP_NAME} v${APP_VERSION}`);
     bootstrapStartupServices();
     //box.my.HTTPService.start(); 
 
     /**
-     * Wrapper function for convenience
+     * Wrapper covenience function for creating browser windows
      * @returns {void}
      */
     function createBrowserWindow() {
       const win = new box.my.ElectronProvider.BrowserWindow({
         width: 800,
-        height: 600
+        height: 600,
+        webPreferences: {
+          preload: path.join(DIRNAME, 'preload.js')
+        }
       });
     
       win.loadFile(FILE_PATH);
     }
-    
+
+    /**
+     * @param {IEvent<Object>} event 
+     */
+    function onSetTitle(event) {
+      const { payload } = event;
+      const webContents = payload.ipc.sender;
+      const win = box.my.ElectronProvider.BrowserWindow.fromWebContents(webContents);
+      win.setTitle(payload.title);
+    }
 
     /**
      * MACOS-specific handler for launching apps without open windows
@@ -101,10 +124,36 @@ new Sandbox(MY_SERVICES, async function(/** @type {ISandbox} **/box) {
     }
 
     /**
+     * Wraps functions used as handlers for an
+     * event emitted via Electron's `ipcRenderer.send` API; ensures any thrown exceptions are
+     * caught by the main application
+     * @param {()=> void} fn
+     * @returns {Function}
+     */
+    function wrapElectronIpcEventHandler(fn) {
+      /**
+       * @param {Object} ipcEvent - contains metadata and APIs for the Electron event
+       * @param {Any} payload - program data emitted with the event
+       */
+      return function (ipcEvent, payload) {
+        try {
+          const _payload = { ipc: ipcEvent, ...payload };
+          const event = new SystemEvent(Events.IPC_WRAPPER_EVENT, _payload);
+          
+          fn(event.detail);
+        } catch (ex) {
+          console.error(
+            `INTERNAL_ERROR (Main): Exception encountered during async event handler (${fn.name}) See details -> ${ex.message}`
+          );
+        }
+      };
+    }
+
+    /**
      * Wraps async functions used as handlers for an
      * `EventTarget` instance; ensures any thrown exceptions are
      * caught by the main application
-     * @param {Function} fn
+     * @param {()=> void} fn
      * @returns {Function}
      */
     function wrapAsyncEventHandler(fn) {
@@ -120,7 +169,9 @@ new Sandbox(MY_SERVICES, async function(/** @type {ISandbox} **/box) {
     }
 
     setTimeout(() => {
-        box.my.Events.dispatchEvent(new SystemEvent(Events.APP_INITIALIZED), {});
+      box.my.Events.dispatchEvent(new SystemEvent(Events.APP_INITIALIZED, {
+        file: GLOBALS.OPENED_FILE
+      }));
     }, 0);
 
   } catch(ex) {
