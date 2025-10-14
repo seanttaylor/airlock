@@ -7,6 +7,8 @@ import { ApplicationService } from '../../types/application.js';
 export class Configuration extends ApplicationService {
   #sandbox;
 
+  static bootstrap = true;
+
   /**
    * @param {ISandbox}
    */
@@ -43,11 +45,7 @@ export class Configuration extends ApplicationService {
    */
   get vars() {
     return {
-      // Just Cors is a proxy which adds CORS headers to the proxied request. See https://justcors.com/ 
-      JUST_CORS: 'https://justcors.com/tl_a9a6867/',
       PORT: 8080,
-      OBJECT_DATA_SINK_BUCKET_NAME: '/training',
-      OBJECT_DATA_SINK_FEEDS_PATH: '/categorization/feeds',
     };
   }
 }

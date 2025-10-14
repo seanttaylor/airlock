@@ -8,11 +8,14 @@ export class NOOPService extends ApplicationService {
   #logger;
   #sandbox;
 
+  static bootstrap = true;
+
   /**
    * @param {ISandbox} sandbox
    */
   constructor(sandbox) {
     super();
+
     this.#sandbox = sandbox;
     this.#logger = sandbox.core.logger.getLoggerInstance();
   }

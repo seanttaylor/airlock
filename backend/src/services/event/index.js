@@ -16,6 +16,8 @@ export class Xevents extends EventTarget {
     #logger;
     #sandbox;
 
+    static bootstrap = true;
+
     /**
      * @param {ISandbox & {my: DependentServices}} sandbox
      */

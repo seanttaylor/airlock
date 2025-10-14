@@ -12,14 +12,17 @@ import { ISandbox, IEvent } from './src/interfaces.js';
 
 /******** SERVICES ********/
 import { Configuration } from './src/services/config/index.js';
-//import { HTTPService } from './src/services/http.js';
+import { HTTPService } from './src/services/http.js';
+import { RouteService } from './src/services/routers/index.js';
 
 import { NOOPService } from './src/services/noop/index.js';
 import { Xevents } from './src/services/event/index.js';
 
-//Sandbox.modules.of('HTTPService', HTTPService);
+Sandbox.modules.of('HTTPService', HTTPService);
 Sandbox.modules.of('Config', Configuration);
+Sandbox.modules.of('RouteService', RouteService);
 Sandbox.modules.of('Events', Xevents);
+
 Sandbox.modules.of('NOOPService', NOOPService);
 
 const APP_NAME = 'com.airlock.backend';
@@ -32,10 +35,8 @@ const MY_SERVICES = [...core, ...services, ...providers];
 new Sandbox(MY_SERVICES, async function(/** @type {ISandbox} **/box) {
   try {
     console.log(`${APP_NAME} v${APP_VERSION}`);
-    bootstrapStartupServices();
     
     box.my.Events.addEventListener(Events.APP_INITIALIZED, wrapAsyncEventHandler(logEvent));    
-    //box.my.HTTPService.start(); 
 
     function logEvent(event) {
       console.log(event);
@@ -46,10 +47,7 @@ new Sandbox(MY_SERVICES, async function(/** @type {ISandbox} **/box) {
      * @param {Object[]} services - services which *REQUIRE* a manual start by the application
      */
     function bootstrapStartupServices(services) {
-      const activeServices = [
-        { ...box.my.Config.status },
-        { ...box.my.NOOPService.status },
-      ];
+      const activeServices = [];
       console.table(activeServices, ['name', 'timestamp']);
     }
 

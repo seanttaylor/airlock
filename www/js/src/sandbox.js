@@ -37,9 +37,18 @@ export class Sandbox extends EventTarget {
       // Create factories for each module
       modules.forEach((moduleName) => {
         if (!Sandbox.modules[moduleName]) {
-          console.error(`INTERNAL_ERROR (sandbox): Cannot create factory; module not found (${moduleName})`);
+          console.error(`INTERNAL_ERROR (Sandbox): Cannot create factory; module not found (${moduleName})`);
           return;
         }
+
+        const moduleDefinition = Sandbox.modules[moduleName];
+
+        // Immediately create a service instance on framework startup
+        // when service classes include a static property of `bootstrap=true`
+        if (moduleDefinition.bootstrap) {
+          sandbox.my[moduleName] = new Sandbox.modules[moduleName](sandbox);
+        }
+
         factories[moduleName] = () => new Sandbox.modules[moduleName](sandbox);
       });
   

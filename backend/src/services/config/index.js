@@ -7,6 +7,8 @@ import { ApplicationService } from '../../types/application.js';
 export class Configuration extends ApplicationService {
   #sandbox;
 
+  static bootstrap = true;
+
   /**
    * @param {ISandbox}
    */
@@ -43,7 +45,7 @@ export class Configuration extends ApplicationService {
    */
   get vars() {
     return {
-      
+      PORT: 8080
     };
   }
 }

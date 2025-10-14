@@ -9,6 +9,8 @@ export class ElectronProvider extends ApplicationService {
   #logger;
   #sandbox;
 
+  static bootstrap = true;
+
   /**
    * @param {ISandbox} sandbox
    */
@@ -40,8 +42,15 @@ export class ElectronProvider extends ApplicationService {
      * `ipcRenderer.send` API  
      * @param {String} name
      * @param {()=> void} callback
+     * @param {Object} options
+     * @param {Boolean} options.hasReply - indicates whether the event was triggered with Electron's `invoke` API or its
+     * `on` API. In the first case the event can return data to the caller.
      */
-    addEventListener(name, callback) {
+    addEventListener(name, callback, options={ hasReply: false }) {
+      if (options.hasReply) {
+        ipcMain.handle(name, callback);
+        return;
+      }
       ipcMain.on(name, callback);
     }
   }

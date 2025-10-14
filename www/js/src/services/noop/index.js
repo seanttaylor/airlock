@@ -8,6 +8,8 @@ export class NOOPService extends ApplicationService {
   #logger;
   #sandbox;
 
+  static bootstrap = true;
+
   /**
    * @param {ISandbox} sandbox
    */

@@ -7,6 +7,8 @@ export const core = [
   // Main services that contain the application business logic
   export const services = [
     'NOOPService',
+    'RouteService',
+    'HTTPService',
   ];
   
   // Objects containing generalized functionality consumed by the services above 

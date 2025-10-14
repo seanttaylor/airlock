@@ -13,19 +13,21 @@ import { ISandbox, IEvent } from './src/interfaces.js';
 
 /******** SERVICES ********/
 import { Configuration } from './src/services/config/index.js';
-//import { HTTPService } from './src/services/http.js';
+import { HTTPService } from './src/services/http.js';
+import { RouteService } from './src/services/routers/index.js';
 
 import { ElectronProvider } from './src/services/electron/index.js';
 import { ProcessProvider } from './src/services/process/index.js';
 import { NOOPService } from './src/services/noop/index.js';
 import { Xevents } from './src/services/event/index.js';
 
-//Sandbox.modules.of('HTTPService', HTTPService);
+Sandbox.modules.of('HTTPService', HTTPService);
+Sandbox.modules.of('RouteService', RouteService);
 Sandbox.modules.of('Config', Configuration);
 Sandbox.modules.of('Events', Xevents);
+
 Sandbox.modules.of('NOOPService', NOOPService);
 Sandbox.modules.of('ElectronProvider', ElectronProvider);
-
 Sandbox.modules.of('ProcessProvider', ProcessProvider);
 
 const APP_NAME = 'com.airlock.app';
@@ -45,9 +47,18 @@ new Sandbox(MY_SERVICES, async function(/** @type {ISandbox} **/box) {
     createBrowserWindow();
     box.my.ElectronProvider.App.on(Events.APP_ACTIVATED_MAC_OS, onMacAppActivation);
     box.my.ElectronProvider.App.on(Events.APP_WINDOWS_CLOSED, onAppWindowsClosed);
-    box.my.Events.addEventListener(Events.APP_INITIALIZED, wrapAsyncEventHandler(logEvent));
+    
+    //box.my.Events.addEventListener(Events.APP_INITIALIZED, wrapAsyncEventHandler(logEvent));
     box.my.ElectronProvider.Ipc.addEventListener(Events.SET_TITLE, wrapElectronIpcEventHandler(onSetTitle));
-        
+    box.my.ElectronProvider.Ipc.addEventListener(Events.APP_INITIALIZED, wrapElectronIpcEventHandler(onAppInitialized));
+    box.my.ElectronProvider.Ipc.addEventListener(
+      Events.HTTP_PROXY_REQUEST, 
+      wrapElectronIpcEventHandler(onHTTPProxyRequest), 
+    { 
+      hasReply: true 
+    });
+
+
     // Detect if a file was passed on launch (e.g., foo.pdf.alock)
     const LAUNCH_ARGS = box.my.ProcessProvider.Process.argv.slice(1);
     const OPENED_FILE = LAUNCH_ARGS.find(arg => arg.endsWith('.alock'));
@@ -56,8 +67,6 @@ new Sandbox(MY_SERVICES, async function(/** @type {ISandbox} **/box) {
     GLOBALS.OPENED_FILE = OPENED_FILE;
     
     console.log(`${APP_NAME} v${APP_VERSION}`);
-    bootstrapStartupServices();
-    //box.my.HTTPService.start(); 
 
     /**
      * Wrapper covenience function for creating browser windows
@@ -73,6 +82,32 @@ new Sandbox(MY_SERVICES, async function(/** @type {ISandbox} **/box) {
       });
     
       win.loadFile(FILE_PATH);
+    }
+
+    /**
+     * @param {IEvent<Object>} event
+     * @returns {Object}
+     */
+    async function onHTTPProxyRequest(event) {
+      const { ipc, ..._payload } = event.payload;
+      const { url, options } = _payload;
+
+      const response = await fetch(url, options);
+      const body = await response.json();
+
+      return {
+        body,
+        ok: response.ok,
+        status: response.status,
+        headers: Object.fromEntries(response.headers.entries())
+      };
+    }
+
+    /**
+     * @param {IEvent<Object>} event
+     */
+    function onAppInitialized(event) {
+      console.log(event);
     }
 
     /**
@@ -114,19 +149,14 @@ new Sandbox(MY_SERVICES, async function(/** @type {ISandbox} **/box) {
      * @param {Object[]} services - services which *REQUIRE* a manual start by the application
      */
     function bootstrapStartupServices(services) {
-      const activeServices = [
-        { ...box.my.Config.status },
-        { ...box.my.NOOPService.status },
-        { ...box.my.ElectronProvider.status },
-
-      ];
+      const activeServices = [];
       console.table(activeServices, ['name', 'timestamp']);
     }
 
     /**
      * Wraps functions used as handlers for an
      * event emitted via Electron's `ipcRenderer.send` API; ensures any thrown exceptions are
-     * caught by the main application
+     * caught by the main application and that event objects passed to handlers have a consistent API
      * @param {()=> void} fn
      * @returns {Function}
      */
@@ -135,12 +165,14 @@ new Sandbox(MY_SERVICES, async function(/** @type {ISandbox} **/box) {
        * @param {Object} ipcEvent - contains metadata and APIs for the Electron event
        * @param {Any} payload - program data emitted with the event
        */
-      return function (ipcEvent, payload) {
+      return async function (ipcEvent, payload) {
         try {
-          const _payload = { ipc: ipcEvent, ...payload };
-          const event = new SystemEvent(Events.IPC_WRAPPER_EVENT, _payload);
+          const { rel, ...props } = payload;
+          const _payload = { ipc: ipcEvent, ...props };
+          const event = new SystemEvent(Events.IPC_WRAPPER_EVENT, _payload, { rel });
           
-          fn(event.detail);
+          // Return values MUST be serializable or the renderer process will receive an empty object
+          return await fn(event.detail);
         } catch (ex) {
           console.error(
             `INTERNAL_ERROR (Main): Exception encountered during async event handler (${fn.name}) See details -> ${ex.message}`
@@ -168,11 +200,6 @@ new Sandbox(MY_SERVICES, async function(/** @type {ISandbox} **/box) {
       };
     }
 
-    setTimeout(() => {
-      box.my.Events.dispatchEvent(new SystemEvent(Events.APP_INITIALIZED, {
-        file: GLOBALS.OPENED_FILE
-      }));
-    }, 0);
 
   } catch(ex) {
     console.error(`INTERNAL_ERROR (Main): Exception encountered during startup. See details -> ${ex.message}`);
