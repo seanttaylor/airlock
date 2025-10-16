@@ -33,7 +33,6 @@ export class HTTPService extends ApplicationService {
     super();
     this.#sandbox = sandbox; 
     this.#logger = sandbox.core.logger.getLoggerInstance();
-
     //this.#logger.info('Starting HTTP service...');
     // this is where the server should be defined
     const PORT = this.#sandbox.my.Config.vars.PORT;
@@ -106,12 +105,10 @@ export class HTTPService extends ApplicationService {
       console.error(`INTERNAL_ERROR (HTTPService): **EXCEPTION ENCOUNTERED** on route (${req.path}). See details -> ${error}`);
       res.status(status).send([]);
     });
-    
-    // Skips launching backend in unit test mode
-    if (process.env.NODE_ENV !== 'ci/cd/test/unit') {
-      app.listen(PORT, () => {
-        console.info(`Airlock daemon running on http://localhost:${PORT}`);
-      });
-    }
+
+     
+    app.listen(PORT, () => {
+      console.info(`Airlock daemon running on http://localhost:${PORT}`);
+    });
   }
 }

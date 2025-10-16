@@ -14,7 +14,7 @@ function randomUUID() {
  * @enum {string}
  */
 export const Events = Object.freeze({
-  //APP_INITIALIZED: 'evt.system.app_initialized',
+  APP_INITIALIZED: 'evt.system.app_initialized',
   // Fires when the frontend application has rendered onscreen and is fully interactive
   APP_INITIALIZED_DAEMON_ACTIVATION_REQUIRED: 'evt.airlock.initialized.daemon_activation_required',
   // A macOS-specific event, when user clicks the dock icon and there are no windows open
@@ -23,6 +23,8 @@ export const Events = Object.freeze({
   APP_WINDOWS_CLOSED: 'window-all-closed',
   // Fired when the renderer process makes an HTTP request
   HTTP_PROXY_REQUEST: 'evt.electron.ipc.http_proxy_request',
+  // Fired when the application fails to query the status of the Airlock daemon
+  HEALTH_CHECK_FAILED: 'evt.electron.health_check_failed',
   // Generic wrapper event for all events emitted via the `ipcRenderer.send` API
   IPC_WRAPPER_EVENT: 'evt.electron.ipc',
   SET_TITLE: 'set-title'

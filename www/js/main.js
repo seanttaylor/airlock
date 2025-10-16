@@ -22,8 +22,8 @@ import { NOOPService } from './src/services/noop/index.js';
 import { Xevents } from './src/services/event/index.js';
 
 Sandbox.modules.of('HTTPService', HTTPService);
-Sandbox.modules.of('RouteService', RouteService);
 Sandbox.modules.of('Config', Configuration);
+Sandbox.modules.of('RouteService', RouteService);
 Sandbox.modules.of('Events', Xevents);
 
 Sandbox.modules.of('NOOPService', NOOPService);
@@ -47,7 +47,7 @@ new Sandbox(MY_SERVICES, async function(/** @type {ISandbox} **/box) {
     createBrowserWindow();
     box.my.ElectronProvider.App.on(Events.APP_ACTIVATED_MAC_OS, onMacAppActivation);
     box.my.ElectronProvider.App.on(Events.APP_WINDOWS_CLOSED, onAppWindowsClosed);
-    
+    //box.my.Events.addEventListener(Events.DAEMON_OFFLINE, onDaemonOffline);
     //box.my.Events.addEventListener(Events.APP_INITIALIZED, wrapAsyncEventHandler(logEvent));
     box.my.ElectronProvider.Ipc.addEventListener(Events.SET_TITLE, wrapElectronIpcEventHandler(onSetTitle));
     box.my.ElectronProvider.Ipc.addEventListener(Events.APP_INITIALIZED, wrapElectronIpcEventHandler(onAppInitialized));
@@ -85,6 +85,16 @@ new Sandbox(MY_SERVICES, async function(/** @type {ISandbox} **/box) {
     }
 
     /**
+     * Pushes a notification to the renderer process when the Airlock 
+     * daemon does not send a heartbeat
+     * @param {IEvent<Object>} event 
+     */
+    function onDaemonOffline(event) {
+      
+    } 
+
+    /**
+     * Issues an HTTP request in response on behalf of the renderer process
      * @param {IEvent<Object>} event
      * @returns {Object}
      */
@@ -95,6 +105,9 @@ new Sandbox(MY_SERVICES, async function(/** @type {ISandbox} **/box) {
       const response = await fetch(url, options);
       const body = await response.json();
 
+      // Handlers returning data in reply to an Electron IPC event **MUST** serialize 
+      // the data before returning or Electron will convert the return data to 
+      // an empty object
       return {
         body,
         ok: response.ok,
@@ -164,6 +177,7 @@ new Sandbox(MY_SERVICES, async function(/** @type {ISandbox} **/box) {
       /**
        * @param {Object} ipcEvent - contains metadata and APIs for the Electron event
        * @param {Any} payload - program data emitted with the event
+       * @returns {Object}
        */
       return async function (ipcEvent, payload) {
         try {
@@ -177,6 +191,7 @@ new Sandbox(MY_SERVICES, async function(/** @type {ISandbox} **/box) {
           console.error(
             `INTERNAL_ERROR (Main): Exception encountered during async event handler (${fn.name}) See details -> ${ex.message}`
           );
+          return {};
         }
       };
     }

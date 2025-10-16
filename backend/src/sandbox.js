@@ -46,7 +46,7 @@ export class Sandbox extends EventTarget {
         // Immediately create a service instance on framework startup
         // when service classes include a static property of `bootstrap=true`
         if (moduleDefinition.bootstrap) {
-          sandbox.my[moduleName] = new Sandbox.modules[moduleName](sandbox);
+          sandbox.my[`__${moduleName}`] = new Sandbox.modules[moduleName](sandbox);
         }
 
         factories[moduleName] = () => new Sandbox.modules[moduleName](sandbox);
