@@ -5,8 +5,16 @@ import { IEvent } from '../js/src/interfaces.js';
  * @readonly
  * @enum {string}
  */
-export const Endpoints = Object.freeze({
+const Endpoints = Object.freeze({
     STATUS: 'http://localhost:8080/status',
+});
+
+/**
+ * @readonlyc
+ * @enum {string}
+ */
+const Messages = Object.freeze({
+    HEALTH_CHECK_FAILED: 'Could not connect to Airlock daemon. Try restarting the application',
 });
 
 /**
@@ -14,8 +22,8 @@ export const Endpoints = Object.freeze({
  */ 
 
 class AlertBanner {
-
-    #selector;
+    #statusMap = {};
+    #el;
     #timeoutMillis;
 
     /** 
@@ -26,29 +34,34 @@ class AlertBanner {
     * @param {String} [option.dismissSelector] - if `dismissOnly` is `true` a CSS selector for the dissmiss button **MUST** be provided
     */
     constructor(options) {
-        this.#selector = options.selector;
+        this.#el = document.querySelector(options.selector);
         this.#timeoutMillis = options.timeoutMillis;
+    }
+
+    /**
+     * @param {String} message - text to display in the alert banner
+     * @param {String} status
+     */
+    show({ message, status=info, timeout }) {
+        const text = document.querySelector('.alert-message');
+        text.innerText = message;
+
+        this.#el.classList.add('show');
+        this.#el.classList.add(`alert-status-${status}`);
+
+        if (timeout) {
+            setTimeout(() => {
+                this.hide(); 
+            }, timeout);
+            return;
+        }
     }
 
     /**
      * 
      */
-    show() {
-       document.querySelector(this.#selector).classList.add('show');
-    }
-
-    /**
-     * @param {Number} timeout
-     */
-    hide(timeout) {
-        if (timeout) {
-            setTimeout(() => {
-                document.querySelector(this.#selector).classList.add('show'); 
-            }, timeout);
-            return;
-        }
-        document.querySelector(this.#selector).classList.add('show');
-
+    hide() {
+        this.#el.classList.remove('show');
     }
 }
 
@@ -72,8 +85,12 @@ const DOM = {
         const APP_NAME = 'com.airlock.app.renderer';
         const APP_VERSION = '0.0.1';
         const HTTPProxy = window.Airlock.HTTP.proxy;
+        const GLOBALS =  {
+            HEALTH_CHECK_TIMEOUT_MILLIS: 20000,
+            DAEMON_ONLINE: true
+        };
         
-        //const alertBanner = new DOM.AlertBanner({ el: $('#alert-banner'), timeout: 8000 });
+        const alertBanner = new DOM.AlertBanner({ selector: '#alertBanner', timeout: 8000 });
 
         //unlockFileButton.addEventListener('click', onUnlockFile);
         //openFileButton.addEventListener('click', onOpenFile);
@@ -142,7 +159,9 @@ const DOM = {
          * @param {IEvent<Object>} event 
          */
         function onHealthCheckFailed(event) {
-            // alertBanner.show(Messages.HEALTH_CHECK_FAILED);
+            console.log(event)
+            GLOBALS.DAEMON_ONLINE = false;
+            alertBanner.show({ message: Messages.HEALTH_CHECK_FAILED, status: 'error', timeout: 8000 });
         }
 
         /**
@@ -154,17 +173,19 @@ const DOM = {
             setInterval(async () => {
                 try {
                     const response = await HTTPProxy(Endpoints.STATUS);
-                    const CANNOT_REACH_DAEMON = Boolean(response);
-                    const RESPONSE_NOT_OK = Boolean(response?.status === 200);
+                    const CANNOT_REACH_DAEMON = Boolean(!response);
+                    const RESPONSE_NOT_OK = Boolean(response?.status !== 200);
     
                     if (CANNOT_REACH_DAEMON || RESPONSE_NOT_OK) {
                         app.dispatchEvent(new SystemEvent(Events.HEALTH_CHECK_FAILED));
                     }
+
+                    GLOBALS.DAEMON_ONLINE = true;
                 } catch(ex) {
                     console.error(`INTERNAL_ERROR (App Renderer): **EXCEPTION ENCOUNTERED** during health check. See details -> ${ex.message} `)
                 }
 
-            }, 5000);
+            }, GLOBALS.HEALTH_CHECK_TIMEOUT_MILLIS);
         }
                 
         app.dispatchEvent(new SystemEvent(Events.APP_INITIALIZED));

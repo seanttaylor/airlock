@@ -99,21 +99,36 @@ new Sandbox(MY_SERVICES, async function(/** @type {ISandbox} **/box) {
      * @returns {Object}
      */
     async function onHTTPProxyRequest(event) {
-      const { ipc, ..._payload } = event.payload;
-      const { url, options } = _payload;
 
-      const response = await fetch(url, options);
-      const body = await response.json();
+      try { 
+        const { ipc, ..._payload } = event.payload;
+        const { url, options } = _payload;
+  
+        const response = await fetch(url, options);
+        const body = await response.json();
+  
+        // Handlers returning data in reply to an Electron IPC event **MUST** serialize 
+        // the data before returning or Electron will convert the return data to 
+        // an empty object
+        return {
+          body,
+          ok: response.ok,
+          status: response.status,
+          headers: Object.fromEntries(response.headers.entries())
+        };
 
-      // Handlers returning data in reply to an Electron IPC event **MUST** serialize 
-      // the data before returning or Electron will convert the return data to 
-      // an empty object
-      return {
-        body,
-        ok: response.ok,
-        status: response.status,
-        headers: Object.fromEntries(response.headers.entries())
-      };
+      } catch(ex) {
+        console.error(`INTERNAL_ERROR (App Renderer): Exception encountered during proxy HTTP request. See details -> ${ex.message}`);
+        // The only reason an exception should be thrown here is if we can't connect 
+        // to the daemon, hence the hardcoded 503 status
+        return {
+          body: null,
+          ok: false,
+          status: 503,
+          headers: null
+        };
+      }
+     
     }
 
     /**
@@ -189,7 +204,7 @@ new Sandbox(MY_SERVICES, async function(/** @type {ISandbox} **/box) {
           return await fn(event.detail);
         } catch (ex) {
           console.error(
-            `INTERNAL_ERROR (Main): Exception encountered during async event handler (${fn.name}) See details -> ${ex.message}`
+            `INTERNAL_ERROR (Main): Exception encountered during IPC event handler (${fn.name}) See details -> ${ex.message}`
           );
           return {};
         }

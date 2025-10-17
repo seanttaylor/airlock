@@ -10,10 +10,8 @@
     img-src 'self' data:;
     ">
     
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Airlock</title>
-    <!--<link rel="stylesheet" href="../node_modules/@cds/core/global.min.css" />
-    <link rel="stylesheet" href="../node_modules/@cds/core/styles/theme.dark.min.css" />
-    <link rel="stylesheet" href="../node_modules/@clr/ui/clr-ui.min.css"/>-->
     <style>
       * {
         margin: 0;
@@ -28,6 +26,7 @@
         color: #1a1a1a;
         height: 100vh;
         overflow: hidden;
+        position: relative; /* Ensure body is relative for absolute positioning of alert banner */
       }
 
       .app-container {
@@ -45,6 +44,11 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
+        position: absolute; /* Position header absolutely to stay above content */
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 101; /* Ensure header is above alert banner */
       }
 
       .header-left {
@@ -96,15 +100,22 @@
       }
 
       /* Alert Banner */
+      /* Made alert banner absolutely positioned to properly hide above viewport */
       .alert-banner {
+        position: absolute;
+        top: 64px; /* Position below header */
+        left: 0;
+        right: 0;
         background-color: #fef3c7;
         border-bottom: 1px solid #fbbf24;
         padding: 12px 24px;
-        display: none;
+        transform: translateY(-100%);
+        transition: transform 0.3s ease-in-out;
+        z-index: 100;
       }
 
       .alert-banner.show {
-        display: block;
+        transform: translateY(0);
       }
 
       .alert-content {
@@ -142,6 +153,7 @@
         display: flex;
         flex: 1;
         overflow: hidden;
+        margin-top: 64px; /* Margin to account for header height */
       }
 
       /* Sidebar */
@@ -497,7 +509,7 @@
             >Error: Unable to connect to server. Please check your network
             connection and try again.</span
           >
-          <button class="alert-close" onclick="hideAlert()">&times;</button>
+          <button class="alert-close">&times;</button>
         </div>
       </div>
 
@@ -537,18 +549,6 @@
                   <div class="nav-icon"></div>
                   <span class="nav-text">Settings</span>
                 </a>
-                <ul class="nav-sub-list">
-                  <li class="nav-sub-item">
-                    <a href="#" class="nav-sub-link">
-                      <span>Preferences</span>
-                    </a>
-                  </li>
-                  <li class="nav-sub-item">
-                    <a href="#" class="nav-sub-link">
-                      <span>Advanced</span>
-                    </a>
-                  </li>
-                </ul>
               </li>
             </ul>
             <div class="nav-divider"></div>
@@ -629,39 +629,6 @@
       </div>
     </div>
 
-    <script>
-      function hideAlert() {
-        document.getElementById('alertBanner').classList.remove('show');
-      }
-
-      function showAlert() {
-        document.getElementById('alertBanner').classList.add('show');
-      }
-
-      function handleOpen() {
-        console.log('Open button clicked');
-        // Add your file picker logic here
-        showFileDetails();
-      }
-
-      function showFileDetails() {
-        document.querySelector('.empty-state').style.display = 'none';
-        document.getElementById('fileDetails').classList.add('show');
-      }
-
-      function hideFileDetails() {
-        document.querySelector('.empty-state').style.display = 'block';
-        document.getElementById('fileDetails').classList.remove('show');
-      }
-
-      function handleUnlock() {
-        console.log('Unlock button clicked');
-        // Add your unlock logic here
-      }
-
-      // Example: Show file details (for demonstration)
-      // setTimeout(showFileDetails, 1000);
-    </script>
     <script src="./js/renderer.js" type="module"></script>
   </body>
 </html>
