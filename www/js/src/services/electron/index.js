@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain } from 'electron/main';
+import { app, BrowserWindow, dialog, ipcMain } from 'electron/main';
 import { ApplicationService } from '../../types/application.js';
 import { SystemEvent, Events } from '../../types/system-event.js';
 
@@ -35,6 +35,7 @@ export class ElectronProvider extends ApplicationService {
   }
 
   BrowserWindow = BrowserWindow;
+  Dialog = dialog;
 
   Ipc = {
     /**

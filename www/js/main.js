@@ -43,21 +43,31 @@ const MY_SERVICES = [...core, ...services, ...providers];
 
 new Sandbox(MY_SERVICES, async function(/** @type {ISandbox} **/box) {
   try {
-    await box.my.ElectronProvider.App.whenReady();
-    createBrowserWindow();
-    box.my.ElectronProvider.App.on(Events.APP_ACTIVATED_MAC_OS, onMacAppActivation);
-    box.my.ElectronProvider.App.on(Events.APP_WINDOWS_CLOSED, onAppWindowsClosed);
     //box.my.Events.addEventListener(Events.DAEMON_OFFLINE, onDaemonOffline);
     //box.my.Events.addEventListener(Events.APP_INITIALIZED, wrapAsyncEventHandler(logEvent));
+    
+    await box.my.ElectronProvider.App.whenReady();
+    createBrowserWindow();
+
+    box.my.ElectronProvider.App.on(Events.APP_ACTIVATED_MAC_OS, onMacAppActivation);
+    box.my.ElectronProvider.App.on(Events.APP_WINDOWS_CLOSED, onAppWindowsClosed);
     box.my.ElectronProvider.Ipc.addEventListener(Events.SET_TITLE, wrapElectronIpcEventHandler(onSetTitle));
     box.my.ElectronProvider.Ipc.addEventListener(Events.APP_INITIALIZED, wrapElectronIpcEventHandler(onAppInitialized));
+   
     box.my.ElectronProvider.Ipc.addEventListener(
       Events.HTTP_PROXY_REQUEST, 
       wrapElectronIpcEventHandler(onHTTPProxyRequest), 
-    { 
-      hasReply: true 
-    });
-
+      { 
+        hasReply: true 
+      }
+    );
+    box.my.ElectronProvider.Ipc.addEventListener(
+      Events.FILE_DIALOG_ACTIVATED, 
+      wrapElectronIpcEventHandler(onOpenFileDialog),
+      {
+        hasReply: true
+      }
+    );
 
     // Detect if a file was passed on launch (e.g., foo.pdf.alock)
     const LAUNCH_ARGS = box.my.ProcessProvider.Process.argv.slice(1);
@@ -86,12 +96,23 @@ new Sandbox(MY_SERVICES, async function(/** @type {ISandbox} **/box) {
 
     /**
      * Pushes a notification to the renderer process when the Airlock 
-     * daemon does not send a heartbeat
+     * daemon does **not** send a heartbeat
      * @param {IEvent<Object>} event 
      */
     function onDaemonOffline(event) {
       
     } 
+
+    /**
+     * @param {IEvent<Object>} event 
+     * @returns {String|undefined}
+     */
+    async function onOpenFileDialog(event) {
+      const { canceled, filePaths } = await box.my.ElectronProvider.Dialog.showOpenDialog({});
+      if (!canceled) {
+        return filePaths[0];
+      }
+    }
 
     /**
      * Issues an HTTP request in response on behalf of the renderer process

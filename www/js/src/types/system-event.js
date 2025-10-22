@@ -21,6 +21,8 @@ export const Events = Object.freeze({
   APP_ACTIVATED_MAC_OS: 'activate',
   // Fired when all application windows have been closed
   APP_WINDOWS_CLOSED: 'window-all-closed',
+  // Fired when the user wants to open a file
+  FILE_DIALOG_ACTIVATED: 'evt.electron.ipc.file_dialog_activated',
   // Fired when the renderer process makes an HTTP request
   HTTP_PROXY_REQUEST: 'evt.electron.ipc.http_proxy_request',
   // Fired when the application fails to query the status of the Airlock daemon

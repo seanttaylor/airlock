@@ -79,7 +79,7 @@ const DOM = {
         const $ = document.querySelector.bind(document);
         const app = new EventTarget();
         
-        const openFileButton = $('#open-file-btn');
+        const openFileButton = $('#open-button');
         const unlockFileButton = $('#unlock-file-btn');
         
         const APP_NAME = 'com.airlock.app.renderer';
@@ -92,8 +92,8 @@ const DOM = {
         
         const alertBanner = new DOM.AlertBanner({ selector: '#alertBanner', timeout: 8000 });
 
+        openFileButton.addEventListener('click', onOpenFile);
         //unlockFileButton.addEventListener('click', onUnlockFile);
-        //openFileButton.addEventListener('click', onOpenFile);
 
         app.addEventListener(Events.APP_INITIALIZED, onAppInitialized);
         app.addEventListener(Events.HEALTH_CHECK_FAILED, wrapAsyncEventHandler(onHealthCheckFailed));
@@ -148,10 +148,17 @@ const DOM = {
 
         /**
          * 
-         * @param {Object} e 
+         * @param {Object} e - HTML DOM event
          */
-        function onOpenFile(e) {
-
+        async function onOpenFile(e) {
+            const filePath = await window.Airlock.UI.openFileDialog();
+            const IS_ALOCK_FILE = Boolean(filePath.lastIndexOf('.alock') !== -1);
+            
+            if (IS_ALOCK_FILE) {
+                console.log('Launching metadata preview flow');
+                return;
+            }
+            console.error(`INTERNAL_ERROR (AppRenderer): Cannot load file (${filePath}). **ONLY** .alock files are supported`);
         }
 
         /**

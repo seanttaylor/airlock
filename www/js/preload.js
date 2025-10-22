@@ -7,6 +7,8 @@ const electron = require('electron/renderer');
 const Events = Object.freeze({
     // Fired when the renderer process makes an HTTP request
     HTTP_PROXY_REQUEST: 'evt.electron.ipc.http_proxy_request',
+    // Fired when the user wants to open a file
+    FILE_DIALOG_ACTIVATED: 'evt.electron.ipc.file_dialog_activated'
 });
 
 /**
@@ -28,6 +30,17 @@ const Events = Object.freeze({
             setTitle: ({ title }) =>  {
                 ipcRenderer.send('set-title', { title, rel: 'set-title' });
             },
+            /**
+             * Launches the file dialog in the UI
+             * @param {Object} options
+             * @returns {String} the path of the selected file
+            */
+            openFileDialog: async () =>  {
+                return ipcRenderer.invoke(Events.FILE_DIALOG_ACTIVATED, {
+                    rel: Events.FILE_DIALOG_ACTIVATED
+                });
+            },
+
         }; 
 
         const HTTP = {
@@ -62,14 +75,7 @@ const Events = Object.freeze({
         };
         
         contextBridge.exposeInMainWorld('Airlock', {
-            /**
-             * Updates the title bar in the main application window
-             * @param {Object} options
-             * @param {String} options.title
-            */
-            setTitle: ({ title }) =>  {
-                ipcRenderer.send('set-title', { title, rel: 'set-title' });
-            },
+            UI,
             HTTP
         });
         
