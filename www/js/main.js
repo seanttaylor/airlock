@@ -1,4 +1,5 @@
 import path from 'path';
+import fs from 'node:fs';
 import { fileURLToPath } from 'url';
 import { Sandbox } from './src/sandbox.js';
 import { SystemEvent, Events } from './src/types/system-event.js';
@@ -36,7 +37,34 @@ const FILENAME = fileURLToPath(import.meta.url);
 const DIRNAME = path.dirname(FILENAME);
 
 const FILE_PATH = path.join(DIRNAME, '../index.html');
-const GLOBALS = {};
+const GLOBALS = {
+  ui: {
+    window: {
+      main: {
+        width: 800,
+        height: 600,
+        webPreferences: {
+          preload: path.join(DIRNAME, 'preload.js')
+        }
+      },
+      loadingDialog: {
+        width: 300,
+        height: 150,
+        frame: false,
+        //transparent: true,
+        resizable: false,
+        modal: true,
+        //parent: mainWindow,
+        alwaysOnTop: false,
+        webPreferences: {
+          nodeIntegration: true,
+          contextIsolation: false,
+        },
+        html: path.join(DIRNAME, '../dialog-loading.html')
+      }
+    }
+  }
+};
 
 /******** ENSURE DESIRED SERVICES ARE DEFINED IN EITHER `services` or `providers` ********/
 const MY_SERVICES = [...core, ...services, ...providers];
@@ -47,7 +75,10 @@ new Sandbox(MY_SERVICES, async function(/** @type {ISandbox} **/box) {
     //box.my.Events.addEventListener(Events.APP_INITIALIZED, wrapAsyncEventHandler(logEvent));
     
     await box.my.ElectronProvider.App.whenReady();
-    createBrowserWindow();
+    const mainWindow = createBrowserWindow(GLOBALS.ui.window.main);
+    const showLoadingDialog = (options) => createBrowserWindow(options);
+    
+    mainWindow.loadFile(FILE_PATH);
 
     box.my.ElectronProvider.App.on(Events.APP_ACTIVATED_MAC_OS, onMacAppActivation);
     box.my.ElectronProvider.App.on(Events.APP_WINDOWS_CLOSED, onAppWindowsClosed);
@@ -68,6 +99,13 @@ new Sandbox(MY_SERVICES, async function(/** @type {ISandbox} **/box) {
         hasReply: true
       }
     );
+    box.my.ElectronProvider.Ipc.addEventListener(
+      Events.FILE_NAME_RECEIVED, 
+      wrapElectronIpcEventHandler(onFilenameReceived),
+      {
+        hasReply: true
+      }
+    );
 
     // Detect if a file was passed on launch (e.g., foo.pdf.alock)
     const LAUNCH_ARGS = box.my.ProcessProvider.Process.argv.slice(1);
@@ -80,18 +118,11 @@ new Sandbox(MY_SERVICES, async function(/** @type {ISandbox} **/box) {
 
     /**
      * Wrapper covenience function for creating browser windows
-     * @returns {void}
+     * @param {Object} options
+     * @returns {Object} an Electron BrowserWindow instance
      */
-    function createBrowserWindow() {
-      const win = new box.my.ElectronProvider.BrowserWindow({
-        width: 800,
-        height: 600,
-        webPreferences: {
-          preload: path.join(DIRNAME, 'preload.js')
-        }
-      });
-    
-      win.loadFile(FILE_PATH);
+    function createBrowserWindow(options) {
+      return new box.my.ElectronProvider.BrowserWindow(options);
     }
 
     /**
@@ -102,6 +133,22 @@ new Sandbox(MY_SERVICES, async function(/** @type {ISandbox} **/box) {
     function onDaemonOffline(event) {
       
     } 
+
+    /**
+     * Returns metadata for a specified Airlock file; triggers the loading dialog
+     * @param {IEvent<Object>} event 
+     * @returns {Object|undefined}
+     */
+    async function onFilenameReceived(event) {
+      showLoadingDialog(GLOBALS.ui.window.loadingDialog)
+      .loadFile(GLOBALS.ui.window.loadingDialog.html);
+
+      const { payload } = event;
+      const file = await fs.promises.readFile(payload.filePath);
+      const json = JSON.parse(file.toString('utf-8'));
+      return json;
+    }
+
 
     /**
      * @param {IEvent<Object>} event 

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title> Airlock - Contacting Key Server...</title>
+    <style>
+      body {
+        margin: 0;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        background: rgba(83, 79, 79, 0.75);
+        color: white;
+        font-family: system-ui, sans-serif;
+      }
+
+      .bar {
+        position: relative;
+        width: 80%;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.2);
+        overflow: hidden;
+        border-radius: 2px;
+      }
+
+      .bar::before {
+        content: "";
+        position: absolute;
+        left: -40%;
+        width: 40%;
+        height: 100%;
+        background: white;
+        animation: indeterminate 1.2s infinite linear;
+      }
+
+      @keyframes indeterminate {
+        0% {
+          left: -40%;
+          width: 40%;
+        }
+        50% {
+          left: 20%;
+          width: 60%;
+        }
+        100% {
+          left: 100%;
+          width: 40%;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <p>Contacting Airlock Key Server...</p>
+    <div class="bar"></div>
+  </body>
+</html>

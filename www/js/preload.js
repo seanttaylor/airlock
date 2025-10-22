@@ -8,7 +8,10 @@ const Events = Object.freeze({
     // Fired when the renderer process makes an HTTP request
     HTTP_PROXY_REQUEST: 'evt.electron.ipc.http_proxy_request',
     // Fired when the user wants to open a file
-    FILE_DIALOG_ACTIVATED: 'evt.electron.ipc.file_dialog_activated'
+    FILE_DIALOG_ACTIVATED: 'evt.electron.ipc.file_dialog_activated',
+    // Fired when valid airlock file path is selected for opening
+    FILE_NAME_RECEIVED: 'evt.electron.ipc.file_name_received'
+
 });
 
 /**
@@ -40,6 +43,17 @@ const Events = Object.freeze({
                     rel: Events.FILE_DIALOG_ACTIVATED
                 });
             },
+            /**
+             * 
+             * @param {Object} options
+             * @param {String} options.filePath - file path selected in the open dialog
+            */
+            getFileMetadata: async ({ filePath }) => {
+                return ipcRenderer.invoke(Events.FILE_NAME_RECEIVED, {
+                    rel: Events.FILE_NAME_RECEIVED,
+                    filePath
+                })
+            }
 
         }; 
 

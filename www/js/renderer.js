@@ -147,6 +147,13 @@ const DOM = {
         }
 
         /**
+         * @param {Object} fileMetadata
+         */
+        function loadFilePreview(fileMetadata) {
+
+        }
+
+        /**
          * 
          * @param {Object} e - HTML DOM event
          */
@@ -155,7 +162,8 @@ const DOM = {
             const IS_ALOCK_FILE = Boolean(filePath.lastIndexOf('.alock') !== -1);
             
             if (IS_ALOCK_FILE) {
-                console.log('Launching metadata preview flow');
+                const fileMetadata = await window.Airlock.UI.getFileMetadata({ filePath });
+                loadFilePreview(fileMetadata);
                 return;
             }
             console.error(`INTERNAL_ERROR (AppRenderer): Cannot load file (${filePath}). **ONLY** .alock files are supported`);
