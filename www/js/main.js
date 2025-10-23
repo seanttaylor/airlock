@@ -76,7 +76,7 @@ new Sandbox(MY_SERVICES, async function(/** @type {ISandbox} **/box) {
     
     await box.my.ElectronProvider.App.whenReady();
     const mainWindow = createBrowserWindow(GLOBALS.ui.window.main);
-    const showLoadingDialog = (options) => createBrowserWindow(options);
+    const createDialog = (options) => createBrowserWindow(options);
     
     mainWindow.loadFile(FILE_PATH);
 
@@ -105,6 +105,10 @@ new Sandbox(MY_SERVICES, async function(/** @type {ISandbox} **/box) {
       {
         hasReply: true
       }
+    );
+    box.my.ElectronProvider.Ipc.addEventListener(
+      Events.FILE_DIALOG_DEACTIVATED, 
+      wrapElectronIpcEventHandler(onOpenFileDialogDeactivated)
     );
 
     // Detect if a file was passed on launch (e.g., foo.pdf.alock)
@@ -140,13 +144,23 @@ new Sandbox(MY_SERVICES, async function(/** @type {ISandbox} **/box) {
      * @returns {Object|undefined}
      */
     async function onFilenameReceived(event) {
-      showLoadingDialog(GLOBALS.ui.window.loadingDialog)
-      .loadFile(GLOBALS.ui.window.loadingDialog.html);
+      const loadingDialog = createDialog(GLOBALS.ui.window.loadingDialog);
+      loadingDialog.loadFile(GLOBALS.ui.window.loadingDialog.html);
+      GLOBALS.ui.window.loadingDialog.self = loadingDialog;
 
       const { payload } = event;
       const file = await fs.promises.readFile(payload.filePath);
       const json = JSON.parse(file.toString('utf-8'));
       return json;
+    }
+
+    /**
+     * Returns metadata for a specified Airlock file; triggers the loading dialog
+     * @param {IEvent<Object>} event 
+     */
+    async function onOpenFileDialogDeactivated(event) {
+      GLOBALS.ui.window.loadingDialog.self.close();
+      GLOBALS.ui.window.loadingDialog.self = null; 
     }
 
 

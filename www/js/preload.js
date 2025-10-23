@@ -9,6 +9,8 @@ const Events = Object.freeze({
     HTTP_PROXY_REQUEST: 'evt.electron.ipc.http_proxy_request',
     // Fired when the user wants to open a file
     FILE_DIALOG_ACTIVATED: 'evt.electron.ipc.file_dialog_activated',
+    // Fired when the user has selected a file from the file dialog
+    FILE_DIALOG_DEACTIVATED: 'evt.electron.ipc.file_dialog_deactivated',
     // Fired when valid airlock file path is selected for opening
     FILE_NAME_RECEIVED: 'evt.electron.ipc.file_name_received'
 
@@ -41,6 +43,16 @@ const Events = Object.freeze({
             openFileDialog: async () =>  {
                 return ipcRenderer.invoke(Events.FILE_DIALOG_ACTIVATED, {
                     rel: Events.FILE_DIALOG_ACTIVATED
+                });
+            },
+            /**
+             * Launches the file dialog in the UI
+             * @param {Object} options
+             * @returns {String} the path of the selected file
+            */
+            closeFileDialog: async () =>  {
+                ipcRenderer.send(Events.FILE_DIALOG_DEACTIVATED, {
+                    rel: Events.FILE_DIALOG_DEACTIVATED
                 });
             },
             /**

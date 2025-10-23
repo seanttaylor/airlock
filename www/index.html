@@ -1,635 +1,738 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8">
-    <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; 
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; 
     script-src 'self' 'unsafe-inline'; 
     style-src 'self' 'unsafe-inline'; 
     font-src 'self' data: filesystem:;
     img-src 'self' data:;
     ">
-    
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Airlock</title>
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
-          'Helvetica Neue', Arial, sans-serif;
-        background-color: #f5f5f5;
-        color: #1a1a1a;
-        height: 100vh;
-        overflow: hidden;
-        position: relative; /* Ensure body is relative for absolute positioning of alert banner */
-      }
-
-      .app-container {
-        display: flex;
-        flex-direction: column;
-        height: 100vh;
-      }
-
-      /* Header */
-      .header {
-        background-color: #ffffff;
-        border-bottom: 1px solid #e5e5e5;
-        padding: 0 24px;
-        height: 64px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        position: absolute; /* Position header absolutely to stay above content */
-        top: 0;
-        left: 0;
-        right: 0;
-        z-index: 101; /* Ensure header is above alert banner */
-      }
-
-      .header-left {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-      }
-
-      .logo-space {
-        width: 32px;
-        height: 32px;
-        background-color: #d4d4d4;
-        border-radius: 6px;
-        flex-shrink: 0;
-      }
-
-      .app-title {
-        font-size: 18px;
-        font-weight: 600;
-        color: #1a1a1a;
-      }
-
-      .vertical-divider {
-        width: 1px;
-        height: 32px;
-        background-color: #e5e5e5;
-      }
-
-      .icon-placeholders {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
-
-      .icon-placeholder {
-        width: 24px;
-        height: 24px;
-        background-color: #d4d4d4;
-        border-radius: 4px;
-        flex-shrink: 0;
-      }
-
-      .profile-avatar {
-        width: 36px;
-        height: 36px;
-        background-color: #3b82f6;
-        border-radius: 50%;
-        flex-shrink: 0;
-      }
-
-      /* Alert Banner */
-      /* Made alert banner absolutely positioned to properly hide above viewport */
-      .alert-banner {
-        position: absolute;
-        top: 64px; /* Position below header */
-        left: 0;
-        right: 0;
-        background-color: #fef3c7;
-        border-bottom: 1px solid #fbbf24;
-        padding: 12px 24px;
-        transform: translateY(-100%);
-        transition: transform 0.3s ease-in-out;
-        z-index: 100;
-      }
-
-      .alert-banner.show {
-        transform: translateY(0);
-      }
-
-      .alert-content {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        max-width: 100%;
-      }
-
-      .alert-message {
-        font-size: 14px;
-        color: #92400e;
-      }
-
-      .alert-close {
-        background: none;
-        border: none;
-        color: #92400e;
-        cursor: pointer;
-        font-size: 18px;
-        padding: 0;
-        width: 24px;
-        height: 24px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .alert-close:hover {
-        opacity: 0.7;
-      }
-
-      /* Main Layout */
-      .main-layout {
-        display: flex;
-        flex: 1;
-        overflow: hidden;
-        margin-top: 64px; /* Margin to account for header height */
-      }
-
-      /* Sidebar */
-      .sidebar {
-        width: 240px;
-        background-color: #ffffff;
-        border-right: 1px solid #e5e5e5;
-        display: flex;
-        flex-direction: column;
-      }
-
-      .nav-list {
-        list-style: none;
-        padding: 16px 12px;
-        flex: 1;
-      }
-
-      .nav-item {
-        margin-bottom: 4px;
-      }
-
-      .nav-link {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 10px 12px;
-        color: #525252;
-        text-decoration: none;
-        border-radius: 6px;
-        font-size: 14px;
-        transition: background-color 0.2s;
-      }
-
-      .nav-link:hover {
-        background-color: #f5f5f5;
-      }
-
-      .nav-link.active {
-        background-color: #eff6ff;
-        color: #2563eb;
-      }
-
-      .nav-icon {
-        width: 20px;
-        height: 20px;
-        background-color: #a3a3a3;
-        border-radius: 3px;
-        flex-shrink: 0;
-      }
-
-      .nav-link.active .nav-icon {
-        background-color: #2563eb;
-      }
-
-      .nav-text {
-        flex: 1;
-      }
-
-      .inbox-badge {
-        background-color: #ef4444;
-        color: #ffffff;
-        font-size: 12px;
-        font-weight: 600;
-        padding: 2px 8px;
-        border-radius: 12px;
-        min-width: 20px;
-        text-align: center;
-      }
-
-      .nav-sub-list {
-        list-style: none;
-        margin-top: 4px;
-      }
-
-      .nav-sub-item {
-        margin-bottom: 4px;
-      }
-
-      .nav-sub-link {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 8px 12px 8px 44px;
-        color: #737373;
-        text-decoration: none;
-        border-radius: 6px;
-        font-size: 13px;
-        transition: background-color 0.2s;
-      }
-
-      .nav-sub-link:hover {
-        background-color: #f5f5f5;
-        color: #525252;
-      }
-
-      .nav-sub-link.active {
-        background-color: #eff6ff;
-        color: #2563eb;
-      }
-
-      .nav-divider {
-        height: 1px;
-        background-color: #e5e5e5;
-        margin: 8px 12px;
-      }
-
-      /* Main Content */
-      .main-content {
-        flex: 1;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: #fafafa;
-      }
-
-      .empty-state {
-        text-align: center;
-        max-width: 400px;
-      }
-
-      .empty-icon {
-        width: 80px;
-        height: 80px;
-        background-color: #e5e5e5;
-        border-radius: 12px;
-        margin: 0 auto 24px;
-      }
-
-      .empty-title {
-        font-size: 20px;
-        font-weight: 600;
-        color: #1a1a1a;
-        margin-bottom: 8px;
-      }
-
-      .empty-description {
-        font-size: 14px;
-        color: #737373;
-        margin-bottom: 24px;
-      }
-
-      .open-button {
-        background-color: #3b82f6;
-        color: #ffffff;
-        border: none;
-        padding: 10px 24px;
-        font-size: 14px;
-        font-weight: 500;
-        border-radius: 6px;
-        cursor: pointer;
-        transition: background-color 0.2s;
-      }
-
-      .open-button:hover {
-        background-color: #2563eb;
-      }
-
-      .open-button:active {
-        background-color: #1d4ed8;
-      }
-
-      /* File Details View */
-      .file-details {
-        display: none;
-        flex-direction: column;
-        width: 100%;
-        height: 100%;
-      }
-
-      .file-details.show {
-        display: flex;
-      }
-
-      .file-details-content {
-        flex: 1;
-        display: flex;
-        gap: 32px;
-        padding: 48px;
-        align-items: center;
-        justify-content: center;
-        position: relative;
-      }
-
-      /* Increased File Info panel size by 10% */
-      .file-info-column {
-        flex: 1;
-        max-width: 440px;
-      }
-
-      .file-info-fieldset {
-        border: 1px solid #d4d4d4;
-        border-radius: 8px;
-        padding: 26px;
-        background-color: #ffffff;
-      }
-
-      .file-info-fieldset legend {
-        font-size: 17px;
-        font-weight: 600;
-        color: #1a1a1a;
-        padding: 0 8px;
-      }
-
-      .file-info-list {
-        list-style: none;
-      }
-
-      .file-info-item {
-        display: flex;
-        padding: 13px 0;
-        border-bottom: 1px solid #f5f5f5;
-      }
-
-      .file-info-item:last-child {
-        border-bottom: none;
-      }
-
-      /* Set metadata text size to 16px */
-      .file-info-key {
-        font-size: 16px;
-        color: #737373;
-        min-width: 88px;
-        font-weight: 500;
-      }
-
-      .file-info-value {
-        font-size: 16px;
-        color: #1a1a1a;
-        flex: 1;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-
-      /* Style policy and format values as links */
-      .file-info-value a {
-        color: #3b82f6;
-        text-decoration: none;
-      }
-
-      .file-info-value a:hover {
-        text-decoration: underline;
-      }
-
-      .info-icon {
-        width: 16px;
-        height: 16px;
-        border-radius: 50%;
-        background-color: #3b82f6;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        color: #ffffff;
-        font-size: 12px;
-        font-weight: 600;
-        cursor: help;
-        flex-shrink: 0;
-      }
-
-      /* Set divider left position to 55% to give more space to info panel */
-      .file-details-content::after {
-        content: '';
-        position: absolute;
-        left: 55%;
-        top: 80px;
-        bottom: 80px;
-        width: 1px;
-        background-color: #e5e5e5;
-        transform: translateX(-50%);
-      }
-
-      .unlock-column {
-        flex: 1;
-        max-width: 400px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .unlock-button {
-        background-color: #10b981;
-        color: #ffffff;
-        border: none;
-        padding: 20px 64px;
-        font-size: 18px;
-        font-weight: 600;
-        border-radius: 12px;
-        cursor: pointer;
-        transition: all 0.2s;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        letter-spacing: 0.5px;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-      }
-
-      .unlock-button:hover {
-        background-color: #059669;
-        box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
-        transform: translateY(-2px);
-      }
-
-      .unlock-button:active {
-        background-color: #047857;
-        transform: translateY(0);
-      }
-
-      .unlock-icon {
-        width: 24px;
-        height: 24px;
-        background-color: rgba(255, 255, 255, 0.3);
-        border-radius: 4px;
-        flex-shrink: 0;
-      }
-
-      .status-bar {
-        background-color: #334155;
-        padding: 12px 24px;
-        border-top: 1px solid #1e293b;
-      }
-
-      .status-text {
-        font-size: 13px;
-        color: #f1f5f9;
-        font-weight: 600;
-        letter-spacing: 1px;
-        text-transform: uppercase;
-        font-family: 'Courier New', monospace;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="app-container">
-      <!-- Header -->
-      <header class="header">
-        <div class="header-left">
-          <div class="logo-space"></div>
-          <h1 class="app-title">Airlock</h1>
-          <div class="vertical-divider"></div>
-          <div class="icon-placeholders">
-            <div class="icon-placeholder"></div>
-            <div class="icon-placeholder"></div>
-            <div class="icon-placeholder"></div>
-          </div>
-        </div>
-        <div class="profile-avatar"></div>
-      </header>
-
-      <!-- Alert Banner (hidden by default) -->
-      <div class="alert-banner" id="alertBanner">
-        <div class="alert-content">
-          <span class="alert-message"
-            >Error: Unable to connect to server. Please check your network
-            connection and try again.</span
-          >
-          <button class="alert-close">&times;</button>
+  <title>Airlock</title>
+  <link rel="stylesheet" href="./css/style.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background-color: #f5f5f5;
+      color: #1a1a1a;
+      height: 100vh;
+      overflow: hidden;
+      position: relative; /* Ensure body is relative for absolute positioning of alert banner */
+    }
+
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    /* Header */
+    .header {
+      background-color: #ffffff;
+      border-bottom: 1px solid #e5e5e5;
+      padding: 0 24px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: absolute; /* Position header absolutely to stay above content */
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 101; /* Ensure header is above alert banner */
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .logo-space {
+      width: 32px;
+      height: 32px;
+      background-color: #d4d4d4;
+      border-radius: 6px;
+      flex-shrink: 0;
+    }
+
+    .app-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+
+    .vertical-divider {
+      width: 1px;
+      height: 32px;
+      background-color: #e5e5e5;
+    }
+
+    .icon-placeholders {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .icon-placeholder {
+      width: 24px;
+      height: 24px;
+      background-color: #d4d4d4;
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    .profile-avatar {
+      width: 36px;
+      height: 36px;
+      background-color: #3b82f6;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* Alert Banner */
+    /* Made alert banner absolutely positioned to properly hide above viewport */
+    .alert-banner {
+      position: absolute;
+      top: 64px; /* Position below header */
+      left: 0;
+      right: 0;
+      background-color: #fef3c7;
+      border-bottom: 1px solid #fbbf24;
+      padding: 12px 24px;
+      transform: translateY(-100%);
+      transition: transform 0.3s ease-in-out;
+      z-index: 100;
+    }
+
+    .alert-banner.show {
+      transform: translateY(0);
+    }
+
+    .alert-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 100%;
+    }
+
+    .alert-message {
+      font-size: 14px;
+      color: #92400e;
+    }
+
+    .alert-close {
+      background: none;
+      border: none;
+      color: #92400e;
+      cursor: pointer;
+      font-size: 18px;
+      padding: 0;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .alert-close:hover {
+      opacity: 0.7;
+    }
+
+    /* Main Layout */
+    .main-layout {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      margin-top: 64px; /* Margin to account for header height */
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 240px;
+      background-color: #ffffff;
+      border-right: 1px solid #e5e5e5;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .nav-list {
+      list-style: none;
+      padding: 16px 12px;
+      flex: 1;
+    }
+
+    .nav-item {
+      margin-bottom: 4px;
+    }
+
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      color: #525252;
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: background-color 0.2s;
+    }
+
+    .nav-link:hover {
+      background-color: #f5f5f5;
+    }
+
+    .nav-link.active {
+      background-color: #eff6ff;
+      color: #2563eb;
+    }
+
+    .nav-icon {
+      width: 20px;
+      height: 20px;
+      background-color: #a3a3a3;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+
+    .nav-link.active .nav-icon {
+      background-color: #2563eb;
+    }
+
+    .nav-text {
+      flex: 1;
+    }
+
+    .inbox-badge {
+      background-color: #ef4444;
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 12px;
+      min-width: 20px;
+      text-align: center;
+    }
+
+    .nav-sub-list {
+      list-style: none;
+      margin-top: 4px;
+    }
+
+    .nav-sub-item {
+      margin-bottom: 4px;
+    }
+
+    .nav-sub-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 12px 8px 44px;
+      color: #737373;
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 13px;
+      transition: background-color 0.2s;
+    }
+
+    .nav-sub-link:hover {
+      background-color: #f5f5f5;
+      color: #525252;
+    }
+
+    .nav-sub-link.active {
+      background-color: #eff6ff;
+      color: #2563eb;
+    }
+
+    .nav-divider {
+      height: 1px;
+      background-color: #e5e5e5;
+      margin: 8px 12px;
+    }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #fafafa;
+    }
+
+    .empty-state {
+      text-align: center;
+      max-width: 400px;
+    }
+
+    .empty-icon {
+      width: 80px;
+      height: 80px;
+      background-color: #e5e5e5;
+      border-radius: 12px;
+      margin: 0 auto 24px;
+    }
+
+    .empty-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 8px;
+    }
+
+    .empty-description {
+      font-size: 14px;
+      color: #737373;
+      margin-bottom: 24px;
+    }
+
+    .open-button {
+      background-color: #3b82f6;
+      color: #ffffff;
+      border: none;
+      padding: 10px 24px;
+      font-size: 14px;
+      font-weight: 500;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .open-button:hover {
+      background-color: #2563eb;
+    }
+
+    .open-button:active {
+      background-color: #1d4ed8;
+    }
+
+    /* File Details View */
+    .file-details {
+      display: none;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+    }
+
+    .file-details.show {
+      display: flex;
+    }
+
+    .file-details-content {
+      flex: 1;
+      display: flex;
+      gap: 32px;
+      padding: 48px;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    /* Increased File Info panel size by 10% */
+    .file-info-column {
+      flex: 1;
+      max-width: 440px;
+    }
+
+    .file-info-fieldset {
+      border: 1px solid #d4d4d4;
+      border-radius: 8px;
+      padding: 26px;
+      background-color: #ffffff;
+    }
+
+    .file-info-fieldset legend {
+      font-size: 17px;
+      font-weight: 600;
+      color: #1a1a1a;
+      padding: 0 8px;
+    }
+
+    .file-info-list {
+      list-style: none;
+    }
+
+    .file-info-item {
+      display: flex;
+      padding: 13px 0;
+      border-bottom: 1px solid #f5f5f5;
+    }
+
+    .file-info-item:last-child {
+      border-bottom: none;
+    }
+
+    /* Set metadata text size to 16px */
+    .file-info-key {
+      font-size: 16px;
+      color: #737373;
+      min-width: 88px;
+      font-weight: 500;
+    }
+
+    .file-info-value {
+      font-size: 16px;
+      color: #1a1a1a;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Style policy and format values as links */
+    .file-info-value a {
+      color: #3b82f6;
+      text-decoration: none;
+    }
+
+    .file-info-value a:hover {
+      text-decoration: underline;
+    }
+
+    .info-icon {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background-color: #3b82f6;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: help;
+      flex-shrink: 0;
+    }
+
+    /* Set divider left position to 55% to give more space to info panel */
+    .file-details-content::after {
+      content: '';
+      position: absolute;
+      left: 55%;
+      top: 80px;
+      bottom: 80px;
+      width: 1px;
+      background-color: #e5e5e5;
+      transform: translateX(-50%);
+    }
+
+    .unlock-column {
+      flex: 1;
+      max-width: 400px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .unlock-button {
+      background-color: #10b981;
+      color: #ffffff;
+      border: none;
+      padding: 20px 64px;
+      font-size: 18px;
+      font-weight: 600;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .unlock-button:hover {
+      background-color: #059669;
+      box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+      transform: translateY(-2px);
+    }
+
+    .unlock-button:active {
+      background-color: #047857;
+      transform: translateY(0);
+    }
+
+    .unlock-icon {
+      width: 24px;
+      height: 24px;
+      background-color: rgba(255, 255, 255, 0.3);
+      border-radius: 4px;
+      flex-shrink: 0;
+    }
+
+    .status-bar {
+      background-color: #334155;
+      padding: 12px 24px;
+      border-top: 1px solid #1e293b;
+    }
+
+    .status-text {
+      font-size: 13px;
+      color: #f1f5f9;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-family: 'Courier New', monospace;
+    }
+
+    /* Added modal styles for policy claims dialog */
+    /* Modal Backdrop */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(128, 128, 128, 0.7);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-backdrop.show {
+      display: flex;
+    }
+
+    /* Modal Dialog */
+    .modal-dialog {
+      background-color: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      max-width: 600px;
+      width: 90%;
+      max-height: 80vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Modal Header */
+    .modal-header {
+      padding: 24px 24px 16px 24px;
+      border-bottom: 1px solid #e5e5e5;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .modal-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: #737373;
+      cursor: pointer;
+      font-size: 28px;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      transition: background-color 0.2s;
+    }
+
+    .modal-close:hover {
+      background-color: #f5f5f5;
+      color: #1a1a1a;
+    }
+
+    /* Modal Body */
+    .modal-body {
+      padding: 24px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .policy-claims {
+      background-color: #f8f9fa;
+      border: 1px solid #e5e5e5;
+      border-radius: 8px;
+      padding: 20px;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 14px;
+      line-height: 1.6;
+      color: #1a1a1a;
+      overflow-x: auto;
+    }
+
+    .policy-claims pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-left">
+        <div class="logo-space"></div>
+        <h1 class="app-title">Airlock</h1>
+        <div class="vertical-divider"></div>
+        <div class="icon-placeholders">
+          <div class="icon-placeholder"></div>
+          <div class="icon-placeholder"></div>
+          <div class="icon-placeholder"></div>
         </div>
       </div>
+      <div class="profile-avatar"></div>
+    </header>
 
-      <!-- Main Layout -->
-      <div class="main-layout">
-        <!-- Sidebar -->
-        <aside class="sidebar">
-          <nav>
-            <ul class="nav-list">
-              <li class="nav-item">
-                <a href="#" class="nav-link active">
-                  <div class="nav-icon"></div>
-                  <span class="nav-text">Inbox</span>
-                  <span class="inbox-badge">3</span>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a href="#" class="nav-link">
-                  <div class="nav-icon"></div>
-                  <span class="nav-text">Activity</span>
-                </a>
-                <ul class="nav-sub-list">
-                  <li class="nav-sub-item">
-                    <a href="#" class="nav-sub-link">
-                      <span>Policies</span>
-                    </a>
-                  </li>
-                  <li class="nav-sub-item">
-                    <a href="#" class="nav-sub-link">
-                      <span>Logs</span>
-                    </a>
-                  </li>
-                </ul>
-              </li>
-              <li class="nav-item">
-                <a href="#" class="nav-link">
-                  <div class="nav-icon"></div>
-                  <span class="nav-text">Settings</span>
-                </a>
-              </li>
-            </ul>
-            <div class="nav-divider"></div>
-            <ul class="nav-list">
-              <li class="nav-item">
-                <a href="#" class="nav-link">
-                  <div class="nav-icon"></div>
-                  <span class="nav-text">Logout</span>
-                </a>
-              </li>
-            </ul>
-          </nav>
-        </aside>
-
-        <!-- Main Content -->
-        <main class="main-content">
-          <div class="empty-state">
-            <div class="empty-icon"></div>
-            <h2 class="empty-title">No Files</h2>
-            <p class="empty-description">
-              Get started by opening a file or folder
-            </p>
-            <button id="open-button" class="open-button">OPEN</button>
-          </div>
-
-          <!-- File Details View (hidden by default) -->
-          <div class="file-details" id="fileDetails">
-            <div class="file-details-content">
-              <div class="file-info-column">
-                <fieldset class="file-info-fieldset">
-                  <legend>File Info</legend>
-                  <ul class="file-info-list">
-                    <li class="file-info-item">
-                      <span class="file-info-key">name:</span>
-                      <span class="file-info-value">passport.png</span>
-                    </li>
-                    <li class="file-info-item">
-                      <span class="file-info-key">size:</span>
-                      <span class="file-info-value">214 KB</span>
-                    </li>
-                    <li class="file-info-item">
-                      <span class="file-info-key">created:</span>
-                      <span class="file-info-value">2025-01-01T12:00:00</span>
-                    </li>
-                    <li class="file-info-item">
-                      <span class="file-info-key">format:</span>
-                      <!-- Made format value a clickable link -->
-                      <span class="file-info-value"
-                        ><a href="#">airlockv1</a></span
-                      >
-                    </li>
-                    <li class="file-info-item">
-                      <span class="file-info-key">policy:</span>
-                      <!-- Made policy value a clickable link -->
-                      <span class="file-info-value">
-                        <a href="#">2be123</a>
-                        <span class="info-icon" title="Policy information"
-                          >i</span
-                        >
-                      </span>
-                    </li>
-                  </ul>
-                </fieldset>
-              </div>
-              <div class="unlock-column">
-                <!-- Added icon placeholder to unlock button -->
-                <button class="unlock-button" onclick="handleUnlock()">
-                  <div class="unlock-icon"></div>
-                  UNLOCK
-                </button>
-              </div>
-            </div>
-            <div class="status-bar">
-              <span class="status-text">Key Status: NOT VALIDATED</span>
-            </div>
-          </div>
-        </main>
+    <!-- Alert Banner (hidden by default) -->
+    <div class="alert-banner" id="alertBanner">
+      <div class="alert-content">
+        <span class="alert-message">Error: Unable to connect to server. Please check your network connection and try again.</span>
+        <button class="alert-close">&times;</button>
       </div>
     </div>
 
-    <script src="./js/renderer.js" type="module"></script>
-  </body>
+    <!-- Main Layout -->
+    <div class="main-layout">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <nav>
+          <ul class="nav-list">
+            <li class="nav-item">
+              <a href="#" class="nav-link active">
+                <div class="nav-icon"></div>
+                <span class="nav-text">Inbox</span>
+                <span class="inbox-badge">3</span>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="#" class="nav-link">
+                <div class="nav-icon"></div>
+                <span class="nav-text">Activity</span>
+              </a>
+              <ul class="nav-sub-list">
+                <li class="nav-sub-item">
+                  <a href="#" class="nav-sub-link">
+                    <span>Policies</span>
+                  </a>
+                </li>
+                <li class="nav-sub-item">
+                  <a href="#" class="nav-sub-link">
+                    <span>Logs</span>
+                  </a>
+                </li>
+              </ul>
+            </li>
+            <li class="nav-item">
+              <a href="#" class="nav-link">
+                <div class="nav-icon"></div>
+                <span class="nav-text">Settings</span>
+              </a>
+            </li>
+          </ul>
+          <div class="nav-divider"></div>
+          <ul class="nav-list">
+            <li class="nav-item">
+              <a href="#" class="nav-link">
+                <div class="nav-icon"></div>
+                <span class="nav-text">Logout</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <div class="empty-state">
+          <div class="empty-icon"></div>
+          <h2 class="empty-title">No Files</h2>
+          <p class="empty-description">Get started by opening a file or folder</p>
+          <button id="open-button" class="open-button">OPEN</button>
+        </div>
+
+        <!-- File Details View (hidden by default) -->
+        <div class="file-details" id="fileDetails">
+          <div class="file-details-content">
+            <div class="file-info-column">
+              <fieldset class="file-info-fieldset">
+                <legend>File Info</legend>
+                <ul class="file-info-list">
+                  <li class="file-info-item">
+                    <span class="file-info-key">name:</span>
+                    <span class="file-info-value" data-filename>passport.png</span>
+                  </li>
+                  <li class="file-info-item">
+                    <span class="file-info-key">size:</span>
+                    <span class="file-info-value" data-filesize>214 KB</span>
+                  </li>
+                  <li class="file-info-item">
+                    <span class="file-info-key">created:</span>
+                    <span class="file-info-value" data-file-created>2025-01-01T12:00:00</span>
+                  </li>
+                  <li class="file-info-item">
+                    <span class="file-info-key">format:</span>
+                    <!-- Made format value a clickable link -->
+                    <span class="file-info-value"><a href="#" data-file-format>airlockv1</a></span>
+                  </li>
+                  <li class="file-info-item">
+                    <span class="file-info-key">policy:</span>
+                    <!-- Added click handlers to show policy modal -->
+                    <span class="file-info-value">
+                      <a href="#" data-file-policy>2be123</a>
+                      <span class="info-icon" title="Policy information">i</span>
+                    </span>
+                  </li>
+                </ul>
+              </fieldset>
+            </div>
+            <div class="unlock-column">
+              <!-- Added icon placeholder to unlock button -->
+              <button class="unlock-button">
+                <div class="unlock-icon"></div>
+                UNLOCK
+              </button>
+            </div>
+          </div>
+          <div class="status-bar">
+            <span class="status-text">Key Status: NOT VALIDATED</span>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- Added policy claims modal -->
+    <!-- Policy Modal -->
+    <div class="modal-backdrop" id="policy-modal">
+      <div class="modal-dialog" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h3 class="modal-title">Policy Claims</h3>
+          <button id="modal-close" class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="policy-claims">
+            <pre data-file-policy-claims>{
+  "max_uses": 1,
+  "valid_until": "2025-12-31T23:59:59Z",
+  "issuer": "airlock.local",
+  "conditions": {
+    "ip_whitelist": ["127.0.0.1"],
+    "client_type": "desktop"
+  }
+}</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="./js/renderer.js" type="module"></script>
+</body>
 </html>
-  

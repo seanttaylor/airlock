@@ -80,8 +80,11 @@ const DOM = {
         const app = new EventTarget();
         
         const openFileButton = $('#open-button');
+        const policyModal = $('#policy-modal');
         const unlockFileButton = $('#unlock-file-btn');
-        
+        const policyHash = $('[data-file-policy]');
+        const modalClose = $('#modal-close');
+
         const APP_NAME = 'com.airlock.app.renderer';
         const APP_VERSION = '0.0.1';
         const HTTPProxy = window.Airlock.HTTP.proxy;
@@ -92,8 +95,12 @@ const DOM = {
         
         const alertBanner = new DOM.AlertBanner({ selector: '#alertBanner', timeout: 8000 });
 
+        /*** DOM EVENT REGISTRATION ***/
         openFileButton.addEventListener('click', onOpenFile);
         //unlockFileButton.addEventListener('click', onUnlockFile);
+        policyModal.addEventListener('click', onModalBlur);
+        policyHash.addEventListener('click', onShowPolicyModal);
+        modalClose.addEventListener('click', onHidePolicyModal);
 
         app.addEventListener(Events.APP_INITIALIZED, onAppInitialized);
         app.addEventListener(Events.HEALTH_CHECK_FAILED, wrapAsyncEventHandler(onHealthCheckFailed));
@@ -119,6 +126,21 @@ const DOM = {
 
         /**
          * 
+         */
+        function onHidePolicyModal() {
+            policyModal.classList.remove('show');
+        }
+
+        /**
+         * 
+         */
+        function onShowPolicyModal(e) {
+            e.preventDefault();
+            policyModal.classList.add('show');
+        }
+
+        /**
+         * 
          * @param {Object} e 
          */
         async function onUnlockFile(e) {
@@ -139,6 +161,16 @@ const DOM = {
         }
 
         /**
+         * Close modal when clicking on backdrop (outside the dialog)
+         * @param {Object} e 
+         */
+        function onModalBlur(e) {
+            if (e.target === e.currentTarget) {
+               onHidePolicyModal();
+            }
+        }
+
+        /**
          * 
          * @param {IEvent<Object>} event 
          */
@@ -147,10 +179,19 @@ const DOM = {
         }
 
         /**
-         * @param {Object} fileMetadata
+         * @param {Object} fileInfo
          */
-        function loadFilePreview(fileMetadata) {
+        function loadFilePreview(fileInfo) {
+            $('.empty-state').style.display = 'none';
+            $('.file-details').style.display = 'block';
 
+            $('[data-filename]').innerText = fileInfo.metadata.name;
+            $('[data-filesize]').innerText = ` ${Math.round(fileInfo.metadata.size * .01)} KB`;
+            $('[data-file-created').innerText = fileInfo.metadata.created;
+            $('[data-file-format').innerText = fileInfo.format;
+           
+            $('[data-file-policy').innerText = `${fileInfo.policy.slice(0, 10)}...`;
+            $('[data-file-policy]').title = fileInfo.policy;
         }
 
         /**
@@ -164,6 +205,10 @@ const DOM = {
             if (IS_ALOCK_FILE) {
                 const fileMetadata = await window.Airlock.UI.getFileMetadata({ filePath });
                 loadFilePreview(fileMetadata);
+                setTimeout(async ()=> {
+                    await window.Airlock.UI.closeFileDialog();
+                }, 2500);
+                
                 return;
             }
             console.error(`INTERNAL_ERROR (AppRenderer): Cannot load file (${filePath}). **ONLY** .alock files are supported`);

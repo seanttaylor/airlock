@@ -3,3 +3,17 @@ svg.icon {
     width: 24px;
     height: 24px;
 }
+
+.status-bar {
+    position: sticky;
+    top: 100vh;
+}
+
+/*
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; 
+    script-src 'self' 'unsafe-inline'; 
+    style-src 'self' 'unsafe-inline'; 
+    font-src 'self' data: filesystem:;
+    img-src 'self' data:;
+    ">
+*/

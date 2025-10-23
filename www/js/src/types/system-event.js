@@ -23,6 +23,8 @@ export const Events = Object.freeze({
   APP_WINDOWS_CLOSED: 'window-all-closed',
   // Fired when the user wants to open a file in the UI
   FILE_DIALOG_ACTIVATED: 'evt.electron.ipc.file_dialog_activated',
+  // Fired when the user has selected a file from the file dialog
+  FILE_DIALOG_DEACTIVATED: 'evt.electron.ipc.file_dialog_deactivated',
   // Fires when a filename selected for opening is received from the UI
   FILE_NAME_RECEIVED: 'evt.electron.ipc.file_name_received',
   // Fired when the renderer process makes an HTTP request
