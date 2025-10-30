@@ -22,11 +22,14 @@ import { ProcessProvider } from './src/services/process/index.js';
 import { NOOPService } from './src/services/noop/index.js';
 import { Xevents } from './src/services/event/index.js';
 
+import { PolicyService } from './src/services/policy/index.js';
+
 Sandbox.modules.of('HTTPService', HTTPService);
 Sandbox.modules.of('Config', Configuration);
 Sandbox.modules.of('RouteService', RouteService);
 Sandbox.modules.of('Events', Xevents);
 
+Sandbox.modules.of('PolicyService', PolicyService);
 Sandbox.modules.of('NOOPService', NOOPService);
 Sandbox.modules.of('ElectronProvider', ElectronProvider);
 Sandbox.modules.of('ProcessProvider', ProcessProvider);

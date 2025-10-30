@@ -81,7 +81,7 @@ const DOM = {
         
         const openFileButton = $('#open-button');
         const policyModal = $('#policy-modal');
-        const unlockFileButton = $('#unlock-file-btn');
+        const unlockFileButton = $('#unlock-button');
         const policyHash = $('[data-file-policy]');
         const modalClose = $('#modal-close');
 
@@ -90,16 +90,18 @@ const DOM = {
         const HTTPProxy = window.Airlock.HTTP.proxy;
         const GLOBALS =  {
             HEALTH_CHECK_TIMEOUT_MILLIS: 20000,
-            DAEMON_ONLINE: true
+            DAEMON_ONLINE: true,
+            CURRENT_PREVIEW: {}
         };
         
         const alertBanner = new DOM.AlertBanner({ selector: '#alertBanner', timeout: 8000 });
 
         /*** DOM EVENT REGISTRATION ***/
         openFileButton.addEventListener('click', onOpenFile);
-        //unlockFileButton.addEventListener('click', onUnlockFile);
+        unlockFileButton.addEventListener('click', onUnlockFile);
         policyModal.addEventListener('click', onModalBlur);
         policyHash.addEventListener('click', onShowPolicyModal);
+        
         modalClose.addEventListener('click', onHidePolicyModal);
 
         app.addEventListener(Events.APP_INITIALIZED, onAppInitialized);
@@ -145,11 +147,17 @@ const DOM = {
          */
         async function onUnlockFile(e) {
             try {
-                const response = await HTTPProxy(Endpoints.UNLOCK, {
-                    method: 'POST',
-                    headers: {},
-                    body: JSON.stringify({})
+                const { payload, metadata, ...fileDigest } = GLOBALS.CURRENT_PREVIEW;
+                const response = await HTTPProxy(fileDigest.key_uri, {
+                    method: 'GET',
+                    headers: {
+                        'X-Airlock-Policy': fileDigest.policy,
+                        'X-Airlock-Format': fileDigest.format,
+                        'X-Airlock-Claims': window.btoa(JSON.stringify(fileDigest.claims))
+                    },
                 });
+
+                console.log(response);
 
                 //app.dispatchEvent(new SystemEvent(Events.AIRLOCK_KEY_VALIDATED, {...response.body}));
                 //app.dispatchEvent(new SystemEvent(Events.AIRLOCK_KEY_VALIDATION_FAILED));
@@ -192,6 +200,8 @@ const DOM = {
            
             $('[data-file-policy').innerText = `${fileInfo.policy.slice(0, 10)}...`;
             $('[data-file-policy]').title = fileInfo.policy;
+
+            GLOBALS.CURRENT_PREVIEW = fileInfo;
         }
 
         /**

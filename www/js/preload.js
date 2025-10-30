@@ -81,10 +81,15 @@ const Events = Object.freeze({
             proxy: async (url, options={}) => {
                 try {
                     const response = await ipcRenderer.invoke(Events.HTTP_PROXY_REQUEST, { 
-                    rel: Events.HTTP_PROXY_REQUEST,
-                    url, 
-                    options 
-                });
+                        rel: Events.HTTP_PROXY_REQUEST,
+                        url, 
+                        options 
+                    });
+
+                if (response.status >= 400) {
+                    console.error(`INTERNAL_ERROR (HTTPProxy): Fetch request failed with status (${response.status}).`);
+                    return;
+                }
 
                 return response;
 

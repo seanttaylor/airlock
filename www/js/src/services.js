@@ -6,6 +6,7 @@ export const core = [
   
   // Main services that contain the application business logic
   export const services = [
+    'PolicyService',
     'NOOPService',
     'RouteService',
     'HTTPService',
