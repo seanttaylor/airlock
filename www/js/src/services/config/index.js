@@ -31,10 +31,9 @@ export class Configuration extends ApplicationService {
    */
   get keys() {
     return {
+      PUBLIC_KEY: process.env.PUBLIC_KEY,
       SUPABASE_URL: process.env.SUPABASE_URL,
       SUPABASE_KEY: process.env.SUPABASE_KEY,
-      HF_ACCESS_TOKEN: process.env.HF_ACCESS_TOKEN,
-      HF_INFERENCE_ENDPOINT: process.env.HF_INFERENCE_ENDPOINT,
       UPSTASH_URL: process.env.UPSTASH_URL,
       UPSTASH_TOKEN: process.env.UPSTASH_TOKEN
     }
