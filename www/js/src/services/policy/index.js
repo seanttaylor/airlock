@@ -33,18 +33,35 @@ export class PolicyService extends ApplicationService {
      * @returns {Object}
      */
     async validatePolicy({ policy, claims }) {
-  
-      const verifier = createVerify('RSA-SHA256');
-      verifier.update(policy);
-      verifier.end();
 
-      const [ result ] = await this.#dbClient.from('policies').select().eq(`${policy}`);
+      try {
+        const verifier = createVerify('RSA-SHA256');
+        verifier.update(policy);
+        verifier.end();
 
-      return {
-        policy,
-        claims,
-        signature: result.signature,
-        isValid: verifier.verify(this.#PUBLIC_KEY, result.signature, 'base64')
+        const { data, error } = await this.#dbClient.from('policies').select('*').eq('hash', policy);
+        
+        if (error) {
+          throw new Error(error.message);
+        }
+        
+        const [ result ] = data;
+
+        return {
+          policy,
+          claims,
+          signature: result.signature,
+          isValid: verifier.verify(this.#PUBLIC_KEY, result.signature, 'base64')
+        }
+
+      } catch(ex) {
+        this.#logger.error(`INTERNAL_ERROR (PolicyService): **EXCEPTION ENCOUNTERED** during policy validation. See details -> ${ex.message}`);
+        return {
+          policy: null,
+          claims: null,
+          signature: null,
+          isValid: false
+        }
       }
     }
 

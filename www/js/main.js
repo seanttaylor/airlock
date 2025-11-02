@@ -23,6 +23,7 @@ import { NOOPService } from './src/services/noop/index.js';
 import { Xevents } from './src/services/event/index.js';
 
 import { PolicyService } from './src/services/policy/index.js';
+import { Database } from './src/services/db/index.js';
 
 Sandbox.modules.of('HTTPService', HTTPService);
 Sandbox.modules.of('Config', Configuration);
@@ -33,6 +34,8 @@ Sandbox.modules.of('PolicyService', PolicyService);
 Sandbox.modules.of('NOOPService', NOOPService);
 Sandbox.modules.of('ElectronProvider', ElectronProvider);
 Sandbox.modules.of('ProcessProvider', ProcessProvider);
+
+Sandbox.modules.of('Database', Database);
 
 const APP_NAME = 'com.airlock.app';
 const APP_VERSION = '0.0.1';

@@ -59,7 +59,7 @@ export class KeyRouter {
           timestamp: new Date().toISOString(),
         }]);
       } catch(ex) {
-        this.#logger.error(`INTERNAL_ERROR (PolicyService): **EXCEPTION ENCOUNTERED** on route (${req.url}). See details -> ${ex.message}`);
+        this.#logger.error(`INTERNAL_ERROR (PolicyService): **EXCEPTION ENCOUNTERED** while fetching Airlock key (${req.params.id}). See details -> ${ex.message}`);
         next(ex);
       }
     });
