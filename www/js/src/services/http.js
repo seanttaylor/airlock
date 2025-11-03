@@ -74,6 +74,7 @@ export class HTTPService extends ApplicationService {
     // Rate-limited routes
     app.use(simpleRateLimiter);
     app.use(this.#sandbox.my.RouteService.Events);
+    app.use(this.#sandbox.my.RouteService.Object);
 
     // Authenticated routes
     // app.use(this.#sandbox.my.MiddlewareProvider.authenticate.bind( 

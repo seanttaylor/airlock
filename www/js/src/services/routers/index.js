@@ -5,7 +5,7 @@ import { ApplicationService } from '../../types/application.js';
 import { StatusRouter } from './status.js';
 import { EventsRouter } from './events.js';
 import { KeyRouter } from './key.js';
-
+import { ObjectRouter } from './objects.js';
 
 /**
  * @typedef {Object} DependentServices
@@ -32,7 +32,13 @@ export class RouteService extends ApplicationService {
     //const cache = this.#sandbox.my.Cache;
     const logger = this.#sandbox.core.logger.getLoggerInstance();
     const PolicyService = this.#sandbox.my.PolicyService;
-
+    
+    this.Object = new ObjectRouter({
+      /*MiddlewareProvider,*/ 
+      PolicyService,
+      events, 
+      logger 
+    });
     this.Key = new KeyRouter({ 
       /*MiddlewareProvider,*/ 
       PolicyService,

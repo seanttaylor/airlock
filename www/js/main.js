@@ -79,43 +79,48 @@ new Sandbox(MY_SERVICES, async function(/** @type {ISandbox} **/box) {
   try {
     //box.my.Events.addEventListener(Events.DAEMON_OFFLINE, onDaemonOffline);
     //box.my.Events.addEventListener(Events.APP_INITIALIZED, wrapAsyncEventHandler(logEvent));
-    
-    await box.my.ElectronProvider.App.whenReady();
-    const mainWindow = createBrowserWindow(GLOBALS.ui.window.main);
-    const createDialog = (options) => createBrowserWindow(options);
-    
-    mainWindow.loadFile(FILE_PATH);
+    let createDialog;
 
-    box.my.ElectronProvider.App.on(Events.APP_ACTIVATED_MAC_OS, onMacAppActivation);
-    box.my.ElectronProvider.App.on(Events.APP_WINDOWS_CLOSED, onAppWindowsClosed);
-    box.my.ElectronProvider.Ipc.addEventListener(Events.SET_TITLE, wrapElectronIpcEventHandler(onSetTitle));
-    box.my.ElectronProvider.Ipc.addEventListener(Events.APP_INITIALIZED, wrapElectronIpcEventHandler(onAppInitialized));
-   
-    box.my.ElectronProvider.Ipc.addEventListener(
-      Events.HTTP_PROXY_REQUEST, 
-      wrapElectronIpcEventHandler(onHTTPProxyRequest), 
-      { 
-        hasReply: true 
-      }
-    );
-    box.my.ElectronProvider.Ipc.addEventListener(
-      Events.FILE_DIALOG_ACTIVATED, 
-      wrapElectronIpcEventHandler(onOpenFileDialog),
-      {
-        hasReply: true
-      }
-    );
-    box.my.ElectronProvider.Ipc.addEventListener(
-      Events.FILE_NAME_RECEIVED, 
-      wrapElectronIpcEventHandler(onFilenameReceived),
-      {
-        hasReply: true
-      }
-    );
-    box.my.ElectronProvider.Ipc.addEventListener(
-      Events.FILE_DIALOG_DEACTIVATED, 
-      wrapElectronIpcEventHandler(onOpenFileDialogDeactivated)
-    );
+    if (!box.my.Config.vars.DAEMON_MODE_ENABLED) {
+
+      await box.my.ElectronProvider.App.whenReady();
+      const mainWindow = createBrowserWindow(GLOBALS.ui.window.main);
+      createDialog = (options) => createBrowserWindow(options);
+      mainWindow.loadFile(FILE_PATH);
+      
+      box.my.ElectronProvider.App.on(Events.APP_ACTIVATED_MAC_OS, onMacAppActivation);
+      box.my.ElectronProvider.App.on(Events.APP_WINDOWS_CLOSED, onAppWindowsClosed);
+      box.my.ElectronProvider.Ipc.addEventListener(Events.SET_TITLE, wrapElectronIpcEventHandler(onSetTitle));
+      box.my.ElectronProvider.Ipc.addEventListener(Events.APP_INITIALIZED, wrapElectronIpcEventHandler(onAppInitialized));
+    
+      box.my.ElectronProvider.Ipc.addEventListener(
+        Events.HTTP_PROXY_REQUEST, 
+        wrapElectronIpcEventHandler(onHTTPProxyRequest), 
+        { 
+          hasReply: true 
+        }
+      );
+      box.my.ElectronProvider.Ipc.addEventListener(
+        Events.FILE_DIALOG_ACTIVATED, 
+        wrapElectronIpcEventHandler(onOpenFileDialog),
+        {
+          hasReply: true
+        }
+      );
+      box.my.ElectronProvider.Ipc.addEventListener(
+        Events.FILE_NAME_RECEIVED, 
+        wrapElectronIpcEventHandler(onFilenameReceived),
+        {
+          hasReply: true
+        }
+      );
+      box.my.ElectronProvider.Ipc.addEventListener(
+        Events.FILE_DIALOG_DEACTIVATED, 
+        wrapElectronIpcEventHandler(onOpenFileDialogDeactivated)
+      );
+    } else {
+      console.log(`[airlock@${APP_VERSION}] Airlock is currently running in **DAEMON ONLY** mode; Electron events **WILL NOT** be registered and no UI will display.`);
+    }
 
     // Detect if a file was passed on launch (e.g., foo.pdf.alock)
     const LAUNCH_ARGS = box.my.ProcessProvider.Process.argv.slice(1);

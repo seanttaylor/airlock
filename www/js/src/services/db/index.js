@@ -18,7 +18,8 @@ export class Database extends ApplicationService {
   constructor(sandbox) {
     super();
     try {
-      const { SUPABASE_URL, SUPABASE_KEY } = sandbox.my.Config.keys;
+      const { SUPABASE_KEY } = sandbox.my.Config.keys;
+      const { SUPABASE_URL } = sandbox.my.Config.vars;
       this.#sandbox = sandbox;
       this.#logger = sandbox.core.logger.getLoggerInstance();
       this.#client = createClient(SUPABASE_URL, SUPABASE_KEY);
