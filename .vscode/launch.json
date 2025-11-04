@@ -6,13 +6,14 @@
     "configurations": [
     
         {
+            "name": "Launch Airlock (DAEMON-ONLY Mode)",
             "type": "node",
             "request": "launch",
-            "name": "Launch Program",
-            "skipFiles": [
-                "<node_internals>/**"
-            ],
-            "program": "${workspaceFolder}/www/js/main.js"
+            "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron",
+            "runtimeArgs": ["."],
+            "cwd": "${workspaceFolder}",
+            "envFile": "${workspaceFolder}/www/js/.env",
+            "console": "integratedTerminal"
         }
     ]
 }

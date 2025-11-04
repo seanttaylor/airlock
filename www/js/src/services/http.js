@@ -103,13 +103,13 @@ export class HTTPService extends ApplicationService {
       res.set('X-Total-Count', 0);
       res.set('X-Request-Id', res.locals.request_id);
       
-      console.error(`INTERNAL_ERROR (HTTPService): **EXCEPTION ENCOUNTERED** on route (${req.path}). See details -> ${error}`);
+      this.#logger.error(`INTERNAL_ERROR (HTTPService): **EXCEPTION ENCOUNTERED** on route (${req.path}). See details -> ${error}`);
       res.status(status).send([]);
     });
 
      
     app.listen(PORT, () => {
-      console.info(`Airlock daemon running on http://localhost:${PORT}`);
+      this.#logger.info(`Airlock daemon running on http://localhost:${PORT}`);
     });
   }
 }

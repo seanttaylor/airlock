@@ -1,4 +1,5 @@
-import { createVerify } from 'node:crypto';
+
+import { createVerify, constants, createHash, sign } from 'node:crypto';
 import { ApplicationService } from '../../types/application.js';
 import { SystemEvent, Events } from '../../types/system-event.js';
 
@@ -7,7 +8,7 @@ import { SystemEvent, Events } from '../../types/system-event.js';
  */
 export class PolicyService extends ApplicationService {
   #PUBLIC_KEY;
-  #DataAccessLayer;
+  #PRIVATE_KEY;
   #dbClient;
   #logger;
   #sandbox;
@@ -22,6 +23,7 @@ export class PolicyService extends ApplicationService {
     this.#sandbox = sandbox;
     this.#logger = sandbox.core.logger.getLoggerInstance();
     this.#PUBLIC_KEY = sandbox.my.Config.keys.PUBLIC_KEY;
+    this.#PRIVATE_KEY = sandbox.my.Config.keys.PRIVATE_KEY;
     this.#dbClient = sandbox.my.Database.getClient();
   }
 
@@ -62,6 +64,42 @@ export class PolicyService extends ApplicationService {
           signature: null,
           isValid: false
         }
+      }
+    }
+
+    /**
+     * Creates a hash of an incoming access policy for a new Airlock object
+     * @param {Object} options
+     * @param {Object} options.claims - the plain-text access policy claims
+     * @returns {{ hash: string, policyId: string }}
+     */
+    async create(claims) {
+      try {
+        const claimString = JSON.stringify(claims);
+        const hash = createHash('sha256').update(claimString).digest('hex');
+        const signature = sign('sha256', Buffer.from(hash), {
+          key: this.#PRIVATE_KEY,
+          padding: constants.RSA_PKCS1_PSS_PADDING,
+        }).toString('base64');
+
+        const { data, error } = await this.#dbClient.from('policies').insert([
+          { 
+            hash, 
+            signature,
+            debug: claims 
+          },
+        ]).select();
+
+        if (error) {
+          throw new Error(error.message);
+        }
+
+        const [policy] = data;
+  
+        return { hash, policyId: policy.id };
+
+      } catch(ex) {
+        this.#logger.error(`INTENRNAL_ERROR (PolicyService): **EXCEPTION ENCOUNTERED** while creating object policy. See details -> ${ex.message}`);
       }
     }
 

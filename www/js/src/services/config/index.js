@@ -41,6 +41,7 @@ export class Configuration extends ApplicationService {
   get keys() {
     return {
       PUBLIC_KEY: process.env.PUBLIC_KEY,
+      PRIVATE_KEY: process.env.PRIVATE_KEY,
       SUPABASE_KEY: process.env.SUPABASE_KEY,
       UPSTASH_TOKEN: process.env.UPSTASH_TOKEN
     }

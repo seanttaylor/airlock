@@ -12,6 +12,19 @@ export class Sandbox extends EventTarget {
       super();
   
       const factories = {};
+      /**
+       * @description Colors used for the custom logger 
+       */
+      const COLORS = {
+        reset: '\x1b[0m',
+        red: '\x1b[31m',
+        green: '\x1b[32m',
+        yellow: '\x1b[33m',
+        blue: '\x1b[34m',
+        magenta: '\x1b[35m',
+        cyan: '\x1b[36m'
+      };
+      const logHeader ='airlock@v0.0.1';
   
       /**
        * An object with the `core` namespaces and event-related methods available to
@@ -26,7 +39,14 @@ export class Sandbox extends EventTarget {
           fetch: fetch,
           generateUUID: this.generateUUID,
           logger: {
-            getLoggerInstance: () => console,
+            getLoggerInstance: () => {
+              return {
+                info: (msg) => console.info(`${COLORS.green}[${logHeader}]${COLORS.reset} ${msg}`),
+                log: (msg) => console.log(`${COLORS.cyan}[${logHeader}]${COLORS.reset} ${msg}`),
+                warn: (msg) => console.warn(`${COLORS.yellow}[${logHeader}]${COLORS.reset} ${msg}`),
+                error: (msg) => console.error(`${COLORS.red}[${logHeader}]${COLORS.reset} ${msg}`)
+              };
+            },
           },
         },
         // Bind event methods from the EventTarget (i.e., this) to ensure proper context

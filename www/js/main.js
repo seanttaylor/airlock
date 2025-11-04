@@ -80,6 +80,7 @@ new Sandbox(MY_SERVICES, async function(/** @type {ISandbox} **/box) {
     //box.my.Events.addEventListener(Events.DAEMON_OFFLINE, onDaemonOffline);
     //box.my.Events.addEventListener(Events.APP_INITIALIZED, wrapAsyncEventHandler(logEvent));
     let createDialog;
+    const logger = box.core.logger.getLoggerInstance();
 
     if (!box.my.Config.vars.DAEMON_MODE_ENABLED) {
 
@@ -119,7 +120,7 @@ new Sandbox(MY_SERVICES, async function(/** @type {ISandbox} **/box) {
         wrapElectronIpcEventHandler(onOpenFileDialogDeactivated)
       );
     } else {
-      console.log(`[airlock@${APP_VERSION}] Airlock is currently running in **DAEMON ONLY** mode; Electron events **WILL NOT** be registered and no UI will display.`);
+      logger.warn('Airlock is currently running in **DAEMON ONLY** mode; Electron events **WILL NOT** be registered and no UI will display.');
     }
 
     // Detect if a file was passed on launch (e.g., foo.pdf.alock)
@@ -129,7 +130,7 @@ new Sandbox(MY_SERVICES, async function(/** @type {ISandbox} **/box) {
     GLOBALS.LAUNCH_ARGS = LAUNCH_ARGS;
     GLOBALS.OPENED_FILE = OPENED_FILE;
     
-    console.log(`${APP_NAME} v${APP_VERSION}`);
+    //console.log(`${APP_NAME} v${APP_VERSION}`);
 
     /**
      * Wrapper covenience function for creating browser windows

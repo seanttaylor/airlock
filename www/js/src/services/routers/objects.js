@@ -23,14 +23,25 @@ export class ObjectRouter {
      */
     router.post('/objects', async (req, res, next) => {
       try { 
-        const policy = req.body.claims;
+        const policyClaims = req.body.claims;
         const payload = req.body.payload;
 
-        console.log({ policy, payload });
+        const { hash, policyId } = await PolicyService.create(policyClaims);
+        //const { keyId, object } = await ObjectService.create(payload);
+        //TODO: combine object data with ids and policy hash and return to client
 
         res.set('X-Count', 1);
         res.json([{
-          timestamp: new Date().toISOString(),
+          format: 'airlock.v.1',
+          keyURI: '/keys/foo-bar-baz',
+          claims: policyClaims,
+          metadata: {
+            name: 'avatar.png',
+            size: 21845,
+            created: '2025-10-22T14:00:00Z',
+            mime: 'image/png'
+          },
+          payload: {}
         }]);
       } catch(ex) {
         this.#logger.error(`INTERNAL_ERROR (ObjectService): **EXCEPTION ENCOUNTERED** while creating object. See details -> ${ex.message}`);
