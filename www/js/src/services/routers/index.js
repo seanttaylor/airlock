@@ -32,9 +32,11 @@ export class RouteService extends ApplicationService {
     //const cache = this.#sandbox.my.Cache;
     const logger = this.#sandbox.core.logger.getLoggerInstance();
     const PolicyService = this.#sandbox.my.PolicyService;
+    const ObjectService = this.#sandbox.my.ObjectService;
     
     this.Object = new ObjectRouter({
       /*MiddlewareProvider,*/ 
+      ObjectService,
       PolicyService,
       events, 
       logger 

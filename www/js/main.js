@@ -24,6 +24,7 @@ import { Xevents } from './src/services/event/index.js';
 
 import { PolicyService } from './src/services/policy/index.js';
 import { Database } from './src/services/db/index.js';
+import { ObjectService } from './src/services/object/index.js';
 
 Sandbox.modules.of('HTTPService', HTTPService);
 Sandbox.modules.of('Config', Configuration);
@@ -36,6 +37,7 @@ Sandbox.modules.of('ElectronProvider', ElectronProvider);
 Sandbox.modules.of('ProcessProvider', ProcessProvider);
 
 Sandbox.modules.of('Database', Database);
+Sandbox.modules.of('ObjectService', ObjectService);
 
 const APP_NAME = 'com.airlock.app';
 const APP_VERSION = '0.0.1';

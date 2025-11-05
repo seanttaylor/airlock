@@ -55,6 +55,8 @@ export class Configuration extends ApplicationService {
       APP_VERSION: '0.0.1',
       APP_NAME: 'airlock',
       DAEMON_MODE_ENABLED: process.env.DAEMON_MODE_ENABLED,
+      FORMAT_VERSION: 'airlock.v.1',
+      KEY_SERVER: 'http://localhost:8080',
       PORT: 8080,
       SUPABASE_URL: process.env.SUPABASE_URL,
       UPSTASH_URL: process.env.UPSTASH_URL,

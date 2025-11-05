@@ -11,11 +11,12 @@ export class ObjectRouter {
    * @param {Object} options.MiddlewareProvider 
    * @param {Object} options.events - an instance of the events interface
    * @param {Object} options.logger - an instance of the logger interface
-   * @param {Object} options.PolicyService - an API for managing Airlock policies
+   * @param {Object} options.PolicyService - an instance of the PolicyService interface
+   * @param {Object} options.ObjectService - an instance of the ObjectService interface
    */ 
   constructor(options) {
     const router = express.Router();
-    const { PolicyService, logger } = options;
+    const { PolicyService, ObjectService, logger } = options;
     this.#logger = logger;
     
     /**
@@ -27,21 +28,20 @@ export class ObjectRouter {
         const payload = req.body.payload;
 
         const { hash, policyId } = await PolicyService.create(policyClaims);
-        //const { keyId, object } = await ObjectService.create(payload);
-        //TODO: combine object data with ids and policy hash and return to client
+        const object  = await ObjectService.create(payload);
 
+        res.status(201);
         res.set('X-Count', 1);
         res.json([{
-          format: 'airlock.v.1',
-          keyURI: '/keys/foo-bar-baz',
+          keyURI: object.keyURI,
           claims: policyClaims,
+          object,
           metadata: {
             name: 'avatar.png',
             size: 21845,
-            created: '2025-10-22T14:00:00Z',
+            created_at: '2025-10-22T14:00:00Z',
             mime: 'image/png'
           },
-          payload: {}
         }]);
       } catch(ex) {
         this.#logger.error(`INTERNAL_ERROR (ObjectService): **EXCEPTION ENCOUNTERED** while creating object. See details -> ${ex.message}`);
