@@ -3,6 +3,13 @@ import { ApplicationService } from '../../types/application.js';
 import { SystemEvent, Events } from '../../types/system-event.js';
 
 /**
+ * @description Enum of encryption algorithms
+ */
+const ALGO = {
+    AES256: 'AES-256-GCM'
+};
+
+/**
  * Manages encryption of Airlock objects
  */
 export class ObjectService extends ApplicationService {
@@ -51,6 +58,7 @@ export class ObjectService extends ApplicationService {
         const { data, error } = await this.#dbClient.from('keys').insert([{
             key: key.toString('base64'),
             algo: 'AES-256-GCM',
+            // algo: ALGO.AES256
         }])
         .select();
 
@@ -61,9 +69,9 @@ export class ObjectService extends ApplicationService {
         const [result] = data;
 
         return {
-            keyURI: `${this.#Config.vars.KEY_SERVER}/keys/${result.id}`,
+            uri: `${this.#Config.vars.KEY_SERVER}/keys/${result.id}`,
             data: ciphertext.toString('base64'),
-            metadata: {
+            meta: {
                 format: this.#Config.vars.FORMAT_VERSION,
                 iv: ivBase64,
                 tag: authTagBase64,

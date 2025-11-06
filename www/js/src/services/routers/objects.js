@@ -27,13 +27,14 @@ export class ObjectRouter {
         const policyClaims = req.body.claims;
         const payload = req.body.payload;
 
-        const { hash, policyId } = await PolicyService.create(policyClaims);
+        const policyId = await PolicyService.create(policyClaims);
         const object  = await ObjectService.create(payload);
 
         res.status(201);
         res.set('X-Count', 1);
         res.json([{
-          keyURI: object.keyURI,
+          key: object.keyURI,
+          policy: policyId,
           claims: policyClaims,
           object,
           metadata: {

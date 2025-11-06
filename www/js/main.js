@@ -122,7 +122,7 @@ new Sandbox(MY_SERVICES, async function(/** @type {ISandbox} **/box) {
         wrapElectronIpcEventHandler(onOpenFileDialogDeactivated)
       );
     } else {
-      logger.warn('Airlock is currently running in **DAEMON ONLY** mode; Electron events **WILL NOT** be registered and no UI will display.');
+      logger.warn('Airlock is currently running in **DAEMON ONLY** mode; Electron events **WILL NOT** be registered and no UI will display. Set DAEMON_MODE_ENABLED environment variable to FALSE to hide this message.');
     }
 
     // Detect if a file was passed on launch (e.g., foo.pdf.alock)

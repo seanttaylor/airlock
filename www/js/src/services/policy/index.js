@@ -22,26 +22,26 @@ export class PolicyService extends ApplicationService {
     super();
     this.#sandbox = sandbox;
     this.#logger = sandbox.core.logger.getLoggerInstance();
-    this.#PUBLIC_KEY = sandbox.my.Config.keys.PUBLIC_KEY;
     this.#PRIVATE_KEY = sandbox.my.Config.keys.PRIVATE_KEY;
+    this.#PUBLIC_KEY = sandbox.my.Config.keys.PUBLIC_KEY;
     this.#dbClient = sandbox.my.Database.getClient();
   }
 
     /**
      * Verifies the policy hash matches the supplied claims
      * @param {Object} options
-     * @param {Object} options.policy - a signed SHA256 hash of an Airlocked object's access policy claims
-     * @param {Object} options.claims - the plain-text access policy claims
+     * @param {Object} options.policy - uuid pointing an Airlocked object's access policy claims
+     * @param {String} options.claims - stringified access policy claims
      * @returns {Object}
      */
     async validatePolicy({ policy, claims }) {
 
       try {
         const verifier = createVerify('RSA-SHA256');
-        verifier.update(policy);
+        verifier.update(claims);
         verifier.end();
 
-        const { data, error } = await this.#dbClient.from('policies').select('*').eq('hash', policy);
+        const { data, error } = await this.#dbClient.from('policies').select('*').eq('id', policy);
         
         if (error) {
           throw new Error(error.message);
@@ -51,9 +51,12 @@ export class PolicyService extends ApplicationService {
 
         return {
           policy,
-          claims,
+          claims: JSON.parse(claims),
           signature: result.signature,
-          isValid: verifier.verify(this.#PUBLIC_KEY, result.signature, 'base64')
+          isValid: verifier.verify({ 
+            key: this.#PRIVATE_KEY,
+            padding: constants.RSA_PKCS1_PSS_PADDING 
+          }, result.signature, 'base64')
         }
 
       } catch(ex) {
@@ -76,15 +79,13 @@ export class PolicyService extends ApplicationService {
     async create(claims) {
       try {
         const claimString = JSON.stringify(claims);
-        const hash = createHash('sha256').update(claimString).digest('hex');
-        const signature = sign('sha256', Buffer.from(hash), {
+        const signature = sign('RSA-SHA256', claimString, {
           key: this.#PRIVATE_KEY,
           padding: constants.RSA_PKCS1_PSS_PADDING,
         }).toString('base64');
 
         const { data, error } = await this.#dbClient.from('policies').insert([
           { 
-            hash, 
             signature,
             debug: claims 
           },
@@ -96,7 +97,7 @@ export class PolicyService extends ApplicationService {
 
         const [policy] = data;
   
-        return { hash, policyId: policy.id };
+        return policy.id;
 
       } catch(ex) {
         this.#logger.error(`INTENRNAL_ERROR (PolicyService): **EXCEPTION ENCOUNTERED** while creating object policy. See details -> ${ex.message}`);
@@ -117,7 +118,7 @@ export class PolicyService extends ApplicationService {
       // TODO: Validate each claim on the claims object
       //  
 
-      return true; 
+      return; 
     }
 
 }
