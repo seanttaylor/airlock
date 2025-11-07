@@ -1,14 +1,21 @@
 
 import { createVerify, constants, createHash, sign } from 'node:crypto';
+import Ajv from 'ajv';
 import { ApplicationService } from '../../types/application.js';
 import { SystemEvent, Events } from '../../types/system-event.js';
 
+import claimSchema from './claims-schema.json' with { type: 'json'};
+import { ClaimsValidationProvider } from './claims-validator.js';
+
+const ajv = new Ajv();
+
 /**
  * 
- */
+*/
 export class PolicyService extends ApplicationService {
   #PUBLIC_KEY;
   #PRIVATE_KEY;
+  #claimSchema;
   #dbClient;
   #logger;
   #sandbox;
@@ -17,14 +24,16 @@ export class PolicyService extends ApplicationService {
 
   /**
    * @param {ISandbox} sandbox
-   */
-  constructor(sandbox) {
-    super();
-    this.#sandbox = sandbox;
-    this.#logger = sandbox.core.logger.getLoggerInstance();
-    this.#PRIVATE_KEY = sandbox.my.Config.keys.PRIVATE_KEY;
-    this.#PUBLIC_KEY = sandbox.my.Config.keys.PUBLIC_KEY;
-    this.#dbClient = sandbox.my.Database.getClient();
+  */
+ constructor(sandbox) {
+   super();
+   this.#PRIVATE_KEY = sandbox.my.Config.keys.PRIVATE_KEY;
+   this.#PUBLIC_KEY = sandbox.my.Config.keys.PUBLIC_KEY;
+   this.#dbClient = sandbox.my.Database.getClient();
+   this.#logger = sandbox.core.logger.getLoggerInstance();
+   
+   this.#sandbox = sandbox;
+   this.#claimSchema = claimSchema;
   }
 
     /**
@@ -109,15 +118,25 @@ export class PolicyService extends ApplicationService {
      * @param {Object} options
      * @param {Object} options.claims - the plain-text access policy claims
      * @param {Object} options.signature - the signature associated with the incoming policy hash
-     * @param {Object} options.policy - a system-validated policy hash for an Airlocked object
+     * @param {Object} options.policy - a uuid pointing to the policy in the database
      * @returns {Boolean}
      */
-    async verifyClaims({ policy, signature, claims }) {
-      // TODO: Create new hash with the incoming claims
-      // TODO: Compare new hash with incoming policy hash
-      // TODO: Validate each claim on the claims object
-      //  
+    async verifyClaims({ policy, claims }) {
+      try {
+        const isValid = ajv.validate(this.#claimSchema, claims);
+        if (!isValid) {
+          this.#logger.error(`INTERNAL_ERROR (PolicyService): Could not satisfy all policy claims. See details -> ${JSON.stringify(ajv.errors)} `);
+          return false;
+        }
 
+        const claimValidationResult = await ClaimsValidationProvider.validate(claims);
+
+      } catch(ex) {
+        this.#logger.error(`INTERNAL_ERROR (PolicyService): **EXCEPTION ENCOUNTERED** while verifying policy claims. See details -> ${ex.message} `);
+        return false;
+      }
+      
+      
       return; 
     }
 

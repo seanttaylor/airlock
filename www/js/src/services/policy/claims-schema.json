@@ -1,0 +1,38 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Generated schema for Root",
+    "type": "object",
+    "properties": {
+      "max_uses": {
+        "type": "number"
+      },
+      "valid_until": {
+        "type": "string"
+      },
+      "issuer": {
+        "type": "string"
+      },
+      "conditions": {
+        "type": "object",
+        "properties": {
+          "ip_whitelist": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "client_type": {
+            "type": "string"
+          }
+        },
+        "required": [
+        ]
+      }
+    },
+    "required": [
+      "max_uses",
+      "valid_until",
+      "issuer",
+      "conditions"
+    ]
+  }
