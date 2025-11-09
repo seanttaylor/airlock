@@ -25,6 +25,7 @@ import { Xevents } from './src/services/event/index.js';
 import { PolicyService } from './src/services/policy/index.js';
 import { Database } from './src/services/db/index.js';
 import { ObjectService } from './src/services/object/index.js';
+import { ClaimService } from './src/services/claim/index.js';
 
 Sandbox.modules.of('HTTPService', HTTPService);
 Sandbox.modules.of('Config', Configuration);
@@ -38,6 +39,7 @@ Sandbox.modules.of('ProcessProvider', ProcessProvider);
 
 Sandbox.modules.of('Database', Database);
 Sandbox.modules.of('ObjectService', ObjectService);
+Sandbox.modules.of('ClaimService', ClaimService);
 
 const APP_NAME = 'com.airlock.app';
 const APP_VERSION = '0.0.1';
@@ -81,6 +83,7 @@ new Sandbox(MY_SERVICES, async function(/** @type {ISandbox} **/box) {
   try {
     //box.my.Events.addEventListener(Events.DAEMON_OFFLINE, onDaemonOffline);
     //box.my.Events.addEventListener(Events.APP_INITIALIZED, wrapAsyncEventHandler(logEvent));
+    box.my.Events.addEventListener(Events.POLICY_VALIDATION_FAILURE, wrapAsyncEventHandler(onPolicyValidationFailure));
     let createDialog;
     const logger = box.core.logger.getLoggerInstance();
 
@@ -151,6 +154,15 @@ new Sandbox(MY_SERVICES, async function(/** @type {ISandbox} **/box) {
     function onDaemonOffline(event) {
       
     } 
+
+    /**
+     *
+     * @param {IEvent<Object>} event 
+     */
+    function onPolicyValidationFailure(event) {
+      console.log(event);
+    } 
+  
 
     /**
      * Returns metadata for a specified Airlock file; triggers the loading dialog

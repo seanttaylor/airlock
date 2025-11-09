@@ -6,6 +6,7 @@ export const core = [
   
   // Main services that contain the application business logic
   export const services = [
+    'ClaimService',
     'Database',
     'ObjectService',
     'PolicyService',
@@ -17,5 +18,5 @@ export const core = [
   // Objects containing generalized functionality consumed by the services above 
   export const providers = [
     'ElectronProvider',
-    'ProcessProvider'
+    'ProcessProvider',
   ];

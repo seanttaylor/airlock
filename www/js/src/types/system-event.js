@@ -33,6 +33,8 @@ export const Events = Object.freeze({
   HEALTH_CHECK_FAILED: 'evt.electron.health_check_failed',
   // Generic wrapper event for all events emitted via the `ipcRenderer.send` API
   IPC_WRAPPER_EVENT: 'evt.electron.ipc',
+  // Fired when Airlock object access policy claims are **NOT** satisfied
+  POLICY_VALIDATION_FAILURE: 'evt.policy.claims.validation_failure',
   SET_TITLE: 'set-title'
 });
 
