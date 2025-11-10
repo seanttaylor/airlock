@@ -27,6 +27,8 @@ import { Database } from './src/services/db/index.js';
 import { ObjectService } from './src/services/object/index.js';
 import { ClaimService } from './src/services/claim/index.js';
 
+import { ClaimValidationProvider } from './src/services/claim-validator/index.js';
+
 Sandbox.modules.of('HTTPService', HTTPService);
 Sandbox.modules.of('Config', Configuration);
 Sandbox.modules.of('RouteService', RouteService);
@@ -40,6 +42,7 @@ Sandbox.modules.of('ProcessProvider', ProcessProvider);
 Sandbox.modules.of('Database', Database);
 Sandbox.modules.of('ObjectService', ObjectService);
 Sandbox.modules.of('ClaimService', ClaimService);
+Sandbox.modules.of('ValidationProvider', ClaimValidationProvider);
 
 const APP_NAME = 'com.airlock.app';
 const APP_VERSION = '0.0.1';

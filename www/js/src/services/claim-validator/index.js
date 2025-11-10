@@ -1,0 +1,35 @@
+import { ApplicationService } from '../../types/application.js';
+import { SystemEvent, Events } from '../../types/system-event.js';
+
+/**
+ * Houses policy claim validation logic for all supported claim types
+ */
+export class ClaimValidationProvider extends ApplicationService {
+  #dbClient;
+  #logger;
+  #sandbox;
+
+  static bootstrap = true;
+
+  /**
+   * @param {ISandbox} sandbox
+   */
+  constructor(sandbox) {
+    super();
+    this.#sandbox = sandbox;
+    this.#logger = sandbox.core.logger.getLoggerInstance();
+    this.#dbClient = sandbox.my.Database.getClient();
+  }
+
+  /**
+   * Airlock policy claim that tests whether there any available access requests
+   * left for the airlocked resource
+   * @param {String} policy
+   * @returns {Boolean}
+   */
+  max_uses(policy) {
+    //const { data, error } = await this.#dbClient.from('policies').select('*').eq('id', policy);
+    return true;
+  }
+
+}

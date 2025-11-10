@@ -19,4 +19,5 @@ export const core = [
   export const providers = [
     'ElectronProvider',
     'ProcessProvider',
+    'ValidationProvider'
   ];

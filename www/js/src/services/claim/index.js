@@ -2,11 +2,6 @@ import { ApplicationService } from '../../types/application.js';
 import { SystemEvent, Events } from '../../types/system-event.js';
 import claimSchema from './claims-schema.json' with { type: 'json' };
 
-const ValidationProvider = {
-    'max_uses'(usesCount) {
-        return true;
-    }
-};
 
 /**
  * Manages the policy claims validation process; calls specified methods on
@@ -40,7 +35,7 @@ export class ClaimService extends ApplicationService {
         let LAST_SATISFIED_CLAIM_INDEX = 0;
         let hasException = false;
         let message = null;
-
+        // USE everyAsync HERE
         const isValid = claimTypes.every((claimType, idx) => {
             LAST_SATISFIED_CLAIM_INDEX = idx;
 
@@ -48,13 +43,11 @@ export class ClaimService extends ApplicationService {
                 // policy claims objects will be **AT MOST** two levels deep
                 if (typeof(claimType) === 'object') {
                     return Object.keys(claimType).every((nestedClaimType) => {
-                        //this.#ValidationProvider[nestedClaimType](claims[claimType])
-                        return ValidationProvider[nestedClaimType](claims[nestedClaimType]);
+                        return this.#sandbox.my.ValidationProvider[nestedClaimType]();
                     });
                 } 
 
-                //this.#ValidationProvider[claimType](claims[claimType]);
-                return ValidationProvider[claimType](claims[claimType]);
+                return this.#sandbox.my.ValidationProvider[claimType](policy);
             } catch(ex) {
                 hasException = true;
                 message = ex.message;
