@@ -21,15 +21,17 @@ export class ClaimValidationProvider extends ApplicationService {
     this.#dbClient = sandbox.my.Database.getClient();
   }
 
+  claims = {
   /**
    * Airlock policy claim that tests whether there any available access requests
    * left for the airlocked resource
    * @param {String} policy
    * @returns {Boolean}
    */
-  max_uses(policy) {
-    //const { data, error } = await this.#dbClient.from('policies').select('*').eq('id', policy);
-    return true;
+    async max_uses(policy) {
+      //const { data, error } = await this.#dbClient.from('policies').select('*').eq('id', policy);
+      return true;
+    }
   }
-
+  
 }
