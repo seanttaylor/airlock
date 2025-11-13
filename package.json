@@ -26,6 +26,7 @@
     "@clr/icons": "^13.0.2",
     "@clr/ui": "^17.11.7",
     "@supabase/supabase-js": "^2.78.0",
+    "@upstash/redis": "^1.35.6",
     "ajv": "^8.17.1",
     "body-parser": "^2.2.0",
     "cors": "^2.8.5",
@@ -33,6 +34,7 @@
     "express": "^5.1.0",
     "express-rate-limit": "^8.1.0",
     "js-sha256": "^0.11.1",
+    "memory-cache": "^0.2.0",
     "morgan": "^1.10.1"
   }
 }

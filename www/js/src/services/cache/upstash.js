@@ -1,0 +1,96 @@
+import { ISandbox } from '../../interfaces.js';
+import { SimpleCache } from './index.js';
+import { Redis } from '@upstash/redis'
+
+//const DEFAULT_TTL_MILLIS = 86400000; // 24 hours
+const DEFAULT_TTL_MILLIS = 7200000  // 2 hours
+
+export class Upstash extends SimpleCache {
+  #logger;
+  #redis;
+  #sandbox;
+
+  static bootstrap = true;
+
+  /**
+   * @param {ISandbox} sandbox 
+   */
+  constructor(sandbox) {
+    super();
+    this.#sandbox = sandbox;
+    this.#logger = sandbox.core.logger.getLoggerInstance();
+
+    const { UPSTASH_TOKEN } = sandbox.my.Config.keys;
+    const { UPSTASH_URL } = sandbox.my.Config.vars;
+
+    this.#redis = new Redis({
+      url: UPSTASH_URL,
+      token: UPSTASH_TOKEN,
+    });
+  }
+
+  /**
+   * @returns {Object}
+   */
+  get status() {
+    return {
+      name: this.constructor.name,
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  /**
+   * @param {Object} options 
+   * @param {String} options.key
+   * @param {Object} options.value
+   * @param {Object} options.ttl
+   */
+  async set({ key, value, ttl = DEFAULT_TTL_MILLIS }) {
+    if (!key || !value) {
+      return;
+    }
+    
+    const ttlSeconds = Math.floor(ttl / 1000);
+    await this.#redis.set(key, value, { ex: ttlSeconds });
+  }
+
+  /**
+   * @param {String} key 
+   * @returns 
+   */
+  async get(key) {
+    return await this.#redis.get(key);
+  }
+
+  /**
+   * @param {String} key 
+   */
+  async deleteEntry(key) {
+    await this.#redis.del(key);
+  }
+
+  async clear() {
+    await this.#redis.flushdb();
+  }
+
+  /**
+   * @param {String} key 
+   * @returns {Boolean}
+   */
+  async has(key) {
+    if (!key) {
+      return false;
+    }
+
+    const exists = await this.#redis.exists(key);
+    return exists === 1;
+  }
+
+  /**
+   * @param {String} pattern 
+   * @returns {String[]}
+   */
+  async keys(pattern = '*') {
+    return await this.#redis.keys(pattern);
+  }
+}

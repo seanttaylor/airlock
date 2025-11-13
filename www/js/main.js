@@ -29,6 +29,8 @@ import { ClaimService } from './src/services/claim/index.js';
 
 import { ClaimValidationProvider } from './src/services/claim-validator/index.js';
 import { UtilityProvider } from './src/services/utils/index.js';
+import { Upstash } from './src/services/cache/upstash.js';
+import { DIDService } from './src/services/did/index.js';
 
 Sandbox.modules.of('HTTPService', HTTPService);
 Sandbox.modules.of('Config', Configuration);
@@ -46,6 +48,8 @@ Sandbox.modules.of('ClaimService', ClaimService);
 Sandbox.modules.of('ValidationProvider', ClaimValidationProvider);
 
 Sandbox.modules.of('Utilities', UtilityProvider);
+Sandbox.modules.of('Cache', Upstash);
+Sandbox.modules.of('DIDService', DIDService);
 
 const APP_NAME = 'com.airlock.app';
 const APP_VERSION = '0.0.1';

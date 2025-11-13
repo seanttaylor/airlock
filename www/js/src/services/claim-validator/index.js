@@ -1,5 +1,4 @@
 import { ApplicationService } from '../../types/application.js';
-import { SystemEvent, Events } from '../../types/system-event.js';
 
 /**
  * Houses policy claim validation logic for all supported claim types
@@ -25,7 +24,7 @@ export class ClaimValidationProvider extends ApplicationService {
   /**
    * Airlock policy claim that tests whether there any available access requests
    * left for the airlocked resource
-   * @param {String} policy
+   * @param {Object} policy - the canoncial policy for a specified Airlock resource fetched from the policy authority associated with the resource
    * @returns {Boolean}
    */
     async max_uses(policy) {
